@@ -13,6 +13,7 @@ trade-off shapes the mission's success.
 | If you want to… | Read |
 |---|---|
 | Pick up the work (agent or teammate) | **[HANDOFF.md](HANDOFF.md)**: status, next steps, decisions, open questions |
+| Work on it with an AI coding agent | **[AGENTS.md](AGENTS.md)**: rules and commands for any agent (Claude reads it through `CLAUDE.md`) |
 | Know what the challenge requires | [game-design-docs/03-requirements-checklist.md](game-design-docs/03-requirements-checklist.md) |
 | See the build plan | [implementation-plan/README.md](implementation-plan/README.md) |
 | Run the game | [trajectory/README.md](trajectory/README.md) |
@@ -20,6 +21,7 @@ trade-off shapes the mission's success.
 ## Folders
 
 ```
+AGENTS.md             rules for AI coding agents (CLAUDE.md imports it)
 HANDOFF.md            status, decisions, open questions (update every session)
 game-design-docs/     challenge text, resources, requirements checklist, design guidance
 implementation-plan/  story, architecture, physics, and one spec per build phase (P01–P11)

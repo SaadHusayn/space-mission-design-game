@@ -137,6 +137,8 @@ These were not specified by the team. Each one can be changed.
 
 ## 8. Rules for agents continuing this work
 
+Full rules and commands: **[AGENTS.md](AGENTS.md)** (works for any AI tool; `CLAUDE.md` imports it). Summary:
+
 - Read `implementation-plan/README.md` and the current phase file before coding.
 - `trajectory/src/game/**` must stay **pure TypeScript** (no React/Three/Next). ESLint enforces it.
 - Next.js here is **16.x with breaking changes**: read `trajectory/node_modules/next/dist/docs/` before using Next APIs (see `trajectory/AGENTS.md`).
