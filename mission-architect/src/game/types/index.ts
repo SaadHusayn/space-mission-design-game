@@ -93,6 +93,24 @@ export function emptyDesign(): Design {
   };
 }
 
+/** Resource deltas recorded for one design decision (report "why" bullets use these). */
+export type DecisionDelta = 'mass' | 'cost' | 'power' | 'data' | 'deltaV' | 'science';
+
+/** One design choice, logged during assembly for the mission report. */
+export interface DecisionLogEntry {
+  /** 1-based, in order. */
+  id: number;
+  /** The role that owns the changed slot ('crew' in solo mode). */
+  actor: string;
+  /** What was done, e.g. "equip" / "unequip" / "bus" / "option". */
+  kind: string;
+  slotId: SlotId | null;
+  partId: string | null;
+  partName: string;
+  /** Change in each affected resource (mass in kg, cost in $M, power in W, data in Gb/day, Δv in m/s, science in points). */
+  deltas: Partial<Record<DecisionDelta, number>>;
+}
+
 /** One mission being planned: where, how, and at what difficulty. */
 export interface MissionContext {
   pathway: Pathway;

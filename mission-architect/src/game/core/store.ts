@@ -7,12 +7,17 @@
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
-import type { Difficulty, PathwayId } from '../types';
+import type { DecisionDelta, DecisionLogEntry, Design, Difficulty, PathwayId, SlotId } from '../types';
+import { emptyDesign } from '../types';
+import { gameData } from '../data/loadData';
 import { AVATAR_COLOURS, MAX_CREW, ROLE_IDS, createCrew, type CrewMember } from './crew';
+import { applyChange, redoChange, undoChange, type DesignChange } from './designActions';
 import { canTransition, type Phase } from './machine';
 import { DEFAULT_PATCH, sanitisePatch, type MissionPatch } from './patch';
 import { isUnlocked, recordResult, sanitiseProgress, type Progress } from './progress';
 import { isPrologueStep, nextPrologueStep, type PrologueStep } from './prologue';
+import { summarizeDesign } from '../sim/design';
+import { createMission } from '../sim/mission';
 
 export type Quality = 'low' | 'high';
 
@@ -42,6 +47,30 @@ export interface CurrentMission {
   trajectoryId: string | null;
 }
 
+/**
+ * Which role owns each slot during assembly (phase-05 §5). The commander owns
+ * no slot: they give the final GO and submit to the review. In solo mode every
+ * role is held by one player, so the mapping only affects the decision log.
+ */
+export const SLOT_ACTOR: Readonly<Record<SlotId | 'bus' | 'instruments' | 'fuelMass' | 'supplyDays' | 'spinArmLength', string>> = {
+  bus: 'engineer',
+  power: 'engineer',
+  battery: 'engineer',
+  adcs: 'engineer',
+  propulsion: 'engineer',
+  thermal: 'engineer',
+  radiation: 'engineer',
+  lifeSupport: 'engineer',
+  habitat: 'engineer',
+  heatShield: 'engineer',
+  instruments: 'science',
+  computer: 'comms',
+  comms: 'comms',
+  supplyDays: 'comms',
+  fuelMass: 'engineer',
+  spinArmLength: 'engineer',
+};
+
 export interface GameState {
   phase: Phase;
   settings: Settings;
@@ -49,11 +78,23 @@ export interface GameState {
   profile: Profile;
   prologueStep: PrologueStep;
   mission: CurrentMission | null;
+  /** The spacecraft being assembled (null until a mission is accepted). */
+  design: Design | null;
+  designPast: Design[];
+  designFuture: Design[];
+  /** Every design choice made during assembly, for the mission report. */
+  decisionLog: DecisionLogEntry[];
 
   /** Moves to another phase. Returns false if the transition isn't allowed. */
   goTo: (phase: Phase) => boolean;
   setSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
   setSettingsOpen: (open: boolean) => void;
+
+  /** Applies one design change (equip/unequip/bus/instrument/option). False when nothing changed. */
+  editDesign: (change: DesignChange) => boolean;
+  /** Steps the design back/forward one change. Does not touch the decision log. */
+  undoDesign: () => void;
+  redoDesign: () => void;
 
   setCrew: (crew: CrewMember[]) => void;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -104,6 +145,81 @@ export function defaultProfile(): Profile {
   return { crew: createCrew(1), difficulty: 'engineer', patch: { ...DEFAULT_PATCH }, prologueDone: false, seenCutscenes: [], progress: {} };
 }
 
+/** The full mission context (pathway + trajectory + difficulty) for the mission being planned. */
+function missionContextOf(state: Pick<GameState, 'mission' | 'profile'>): ReturnType<typeof createMission> {
+  const mission = state.mission!;
+  return createMission(mission.pathwayId, mission.trajectoryId ?? undefined, state.profile.difficulty);
+}
+
+/** The role responsible for a kind of design change. */
+function actorFor(change: DesignChange): string {
+  switch (change.kind) {
+    case 'bus':
+      return SLOT_ACTOR.bus;
+    case 'equip':
+    case 'unequip':
+      return SLOT_ACTOR[change.slot];
+    case 'addInstrument':
+    case 'removeInstrument':
+      return SLOT_ACTOR.instruments;
+    case 'option':
+      return SLOT_ACTOR[change.key];
+  }
+}
+
+const OPTION_LABELS: Readonly<Record<'fuelMass' | 'supplyDays' | 'spinArmLength', string>> = {
+  fuelMass: 'Propellant load',
+  supplyDays: 'Crew supplies',
+  spinArmLength: 'Spin habitat arm',
+};
+
+/** Which part the log entry is about (the removed one, for unequip/remove). */
+function partFor(design: Design | null, change: DesignChange): { partId: string | null; partName: string } {
+  const nameOf = (id: string | null) => (id ? (gameData.partById.get(id)?.name ?? id) : '');
+  switch (change.kind) {
+    case 'bus':
+    case 'equip':
+    case 'addInstrument':
+    case 'removeInstrument':
+      return { partId: change.partId, partName: nameOf(change.partId) };
+    case 'unequip': {
+      const id = design?.slots[change.slot] ?? null;
+      return { partId: id, partName: nameOf(id) };
+    }
+    case 'option':
+      return { partId: null, partName: OPTION_LABELS[change.key] };
+  }
+}
+
+/** Builds the decision-log entry for a change, with the resource deltas it caused. */
+function decisionEntry(
+  state: Pick<GameState, 'decisionLog' | 'design'>,
+  change: DesignChange,
+  before: ReturnType<typeof summarizeDesign>,
+  after: ReturnType<typeof summarizeDesign>,
+): DecisionLogEntry {
+  const deltas: Partial<Record<DecisionDelta, number>> = {};
+  const record = (key: DecisionDelta, value: number) => {
+    if (Math.abs(value) > 1e-9) deltas[key] = Math.round(value * 1000) / 1000;
+  };
+  record('mass', after.wetMass - before.wetMass);
+  record('cost', after.totalCost - before.totalCost);
+  record('power', after.powerLoad - before.powerLoad);
+  record('data', after.dataPerDay - before.dataPerDay);
+  record('deltaV', after.deltaV - before.deltaV);
+  record('science', after.science - before.science);
+  const { partId, partName } = partFor(state.design ?? null, change);
+  return {
+    id: state.decisionLog.length + 1,
+    actor: actorFor(change),
+    kind: change.kind,
+    slotId: change.kind === 'equip' || change.kind === 'unequip' ? change.slot : null,
+    partId,
+    partName,
+    deltas,
+  };
+}
+
 /** Cleans a profile loaded from storage, so a damaged or old save can't break the game. */
 export function sanitiseProfile(value: unknown): Profile {
   const base = defaultProfile();
@@ -144,6 +260,10 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     profile: defaultProfile(),
     prologueStep: 'intro',
     mission: null,
+    design: null,
+    designPast: [],
+    designFuture: [],
+    decisionLog: [],
 
     goTo: (phase) => {
       if (!canTransition(get().phase, phase)) return false;
@@ -152,6 +272,35 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     },
     setSetting: (key, value) => set((state) => ({ settings: { ...state.settings, [key]: value } })),
     setSettingsOpen: (open) => set({ settingsOpen: open }),
+
+    editDesign: (change) => {
+      const state = get();
+      if (!state.design || !state.mission) return false;
+      const context = missionContextOf(state);
+      const before = summarizeDesign(state.design, context);
+      const next = applyChange({ past: state.designPast, present: state.design, future: state.designFuture }, change);
+      if (next.present === state.design) return false;
+      const after = summarizeDesign(next.present, context);
+      set({
+        design: next.present,
+        designPast: next.past,
+        designFuture: next.future,
+        decisionLog: [...state.decisionLog, decisionEntry(state, change, before, after)],
+      });
+      return true;
+    },
+    undoDesign: () => {
+      const state = get();
+      if (!state.design) return;
+      const next = undoChange({ past: state.designPast, present: state.design, future: state.designFuture });
+      set({ design: next.present, designPast: next.past, designFuture: next.future });
+    },
+    redoDesign: () => {
+      const state = get();
+      if (!state.design) return;
+      const next = redoChange({ past: state.designPast, present: state.design, future: state.designFuture });
+      set({ design: next.present, designPast: next.past, designFuture: next.future });
+    },
 
     setCrew: (crew) => set((state) => ({ profile: { ...state.profile, crew: crew.map((member) => ({ ...member, roles: [...member.roles] })) } })),
     setDifficulty: (difficulty) => set((state) => ({ profile: { ...state.profile, difficulty } })),
@@ -182,11 +331,16 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     selectPathway: (pathwayId, unlockAll = false) => {
       const state = get();
       if (!isUnlocked(pathwayId, state.profile.progress, unlockAll) || !canTransition(state.phase, 'BRIEFING')) return false;
-      set({ mission: { pathwayId, trajectoryId: null }, phase: 'BRIEFING' });
+      set({ mission: { pathwayId, trajectoryId: null }, design: null, designPast: [], designFuture: [], decisionLog: [], phase: 'BRIEFING' });
       return true;
     },
     openObjective: () => (get().mission ? get().goTo('OBJECTIVE') : false),
-    acceptMission: () => (get().mission ? get().goTo('ASSEMBLY') : false),
+    acceptMission: () => {
+      const state = get();
+      if (!state.mission) return false;
+      set({ design: emptyDesign(), designPast: [], designFuture: [], decisionLog: [] });
+      return state.goTo('ASSEMBLY');
+    },
     backToMap: () => get().goTo('CHAPTER_SELECT'),
     recordMissionResult: (pathwayId, stars, score) =>
       set((state) => ({ profile: { ...state.profile, progress: recordResult(state.profile.progress, pathwayId, stars, score) } })),
