@@ -10,7 +10,7 @@ tests every design choice, and the mission report explains why the mission succe
 
 ## Status
 
-**Phases 01–04 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
+**Phases 01–05 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
 
 | Phase | State |
 |---|---|
@@ -18,8 +18,8 @@ tests every design choice, and the mission report explains why the mission succe
 | P02 Core logic and physics engine: physics, data, design totals, Engineering Review, flight simulation, events, scoring, physics challenges (148 tests) | ✅ built |
 | P03 Recruitment, crew and training: cutscenes, crew setup (solo or up to 4), 7-step training, mission patch | ✅ built |
 | P04 Mission briefing and pathways: 3D pathway map, chapter unlocks, briefing cutscenes, mission contract | ✅ built |
-| P05 Spacecraft assembly and Engineering Review | next |
-| P06–P11 | planned |
+| P05 Spacecraft assembly and Engineering Review: 3D assembly bay, procedural part meshes, live resource HUD, physics calculator, ERB review | ✅ built |
+| P06–P11 | next / planned |
 
 ## Run it
 

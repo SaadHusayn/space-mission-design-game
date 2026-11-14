@@ -1,7 +1,7 @@
 # HANDOFF: TRAJECTORY: Pathways Beyond
 
 > **Read this first if you are a new agent or teammate picking up the project.**
-> Last updated: 2026-11-14 · Current phase: **P04 done → next: P05 (Spacecraft assembly & Engineering Review)**
+> Last updated: 2026-11-15 · Current phase: **P05 done → next: P06 (Launch vehicle, launch & orbit)**
 
 ---
 
@@ -37,11 +37,14 @@ hazards test the design. A report explains why the mission succeeded or failed.
 | P02 Core logic & physics | ✅ Done | 148 tests. Build notes at the end of `implementation-plan/phase-02-core-logic-and-physics-engine.md` |
 | P03 Recruitment, crew & training | ✅ Done | Cutscenes, crew setup, 7-step training, graduation. Build notes at the end of `implementation-plan/phase-03-recruitment-crew-training.md` |
 | P04 Mission briefing & pathways | ✅ Done | 3D pathway map, per-pathway briefing, mission contract screen. Build notes at the end of `implementation-plan/phase-04-mission-briefing-and-pathways.md` |
-| P05–P11 | ⏳ Not started | Specs in `implementation-plan/phase-*.md` |
+| P05 Spacecraft assembly & Engineering Review | ✅ Done | 3D hangar assembly bay, procedural `part_*` meshes on `socket_*` empties, live Resource HUD, Trade-Off popup, Physics Calculator, ERB screen with slot-fix jump & gating. Build notes at the end of `implementation-plan/phase-05-spacecraft-assembly-and-review.md` |
+| P06–P11 | ⏳ Not started | Specs in `implementation-plan/phase-*.md` |
 
 ## 4. Current phase progress (update as you go)
 
-**Next up: P05** (`implementation-plan/phase-05-spacecraft-assembly-and-review.md`): replace the ASSEMBLY stand-in (`ModelPreviewScene` + `ui/PreviewHud.tsx`) with the 3D assembly bay. Use `store.mission` + `createMission()` for the mission, `summarizeDesign`/`reviewDesign` from `@/game` for the HUD and ERB, `ui/ResourcePanel.tsx` (already built) for live resources, and procedural part meshes (team decision: code-built shapes). Add a Playwright spec.
+**Next up: P06** (`implementation-plan/phase-06-launch-and-orbit.md`): replace the `TRAJECTORY` stand-in (`ModelPreviewScene` + `ui/PreviewHud.tsx`) with trajectory comparison cards (using `mission.pathway.trajectories`), launch vehicle selection (`gameData.launchVehicles`), the full GO/NO-GO review (`reviewDesign(design, mission, vehicle)`), and the 3D launch + orbit insertion sequence.
+
+P05 files: `src/game/core/designActions.ts` (+ tests), `src/game/sim/compat.ts` (+ tests), `src/scenes/Hangar/{HangarScene,assemblyStore,assembly.test}.ts(x)`, `src/three/Spacecraft.tsx`, `src/ui/{AssemblyHud,SlotList,PartBrowser,PartCard,TradeOffPopup,EngineerBark,DesignCalculator,ReviewBoard}.tsx`, `tests/e2e/assembly.spec.ts`.
 
 P03 files: `src/game/core/{crew,prologue,patch}.ts` (+ tests), `src/game/data/story.ts`, `src/cutscenes/*` (timeline, scripts CS-00..02, director, overlay), `src/sets/*` (3D sets built from primitives), `src/scenes/{Prologue,Training,ChapterSelect}/*`, `src/ui/{CrewSetup,DialogueBox,PhysicsConsole,ResourcePanel,PatchMaker,MissionPatch,CrewBadge}.tsx`.
 
@@ -125,6 +128,8 @@ These were not specified by the team. Each one can be changed.
 | D28 | `?unlock=all` opens every chapter; `?debug` shows FPS and exposes `window.__game3d` | Testing and demos | `scenes/PathwayMap/mapStore.ts`, `components/GameRoot.tsx` |
 | D29 | A chapter list sits next to the 3D map (phones, keyboard, overlapping labels) | Usability | `scenes/PathwayMap/PathwayHud.tsx` |
 | D14 | Crew radiation limit in game = **1,000 mSv per mission** | Based on space-agency career limits of about 0.6–1 Sv; keeps Mars possible with shielding | `src/game/sim/review.ts` |
+| D30 | **Procedural 3D spacecraft assembly (`Spacecraft.tsx`)** builds each bus, power source, battery, computer, ADCS, antenna, propulsion stage, radiation shield, thermal system, life support, habitat, heat shield and instrument from Three.js primitives attached to `socket_*` empties, with an **Exploded View** toggle that offsets parts outward along their socket vectors | Matches D22 (code-generated 3D shapes) and keeps `part_*` / `socket_*` conventions ready for future GLB drop-ins | `src/three/Spacecraft.tsx` |
+| D31 | **Windows Playwright WebGL2 compatibility**: `--use-angle=gl` is only passed on Linux; Windows uses its native Direct3D 11 ANGLE backend so headless/automated Chrome always initializes WebGL 2 | `--use-angle=gl` disabled WebGL 2 context creation on Windows Chrome | `mission-architect/playwright.config.ts` |
 
 ## 7. Open questions for the team
 
