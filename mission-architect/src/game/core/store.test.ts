@@ -102,3 +102,165 @@ describe('save migration after the rename', () => {
     expect(data[LEGACY_STORAGE_KEYS[0]]).toBe('stale');
   });
 });
+
+describe('spacecraft design state (P05)', () => {
+  /** A store in the ASSEMBLY phase with an empty design for the LEO mission. */
+  function assemblyStore() {
+    const store = createGameStore();
+    const s = store.getState();
+    s.goTo('TITLE');
+    s.goTo('CHAPTER_SELECT');
+    expect(s.selectPathway('leo')).toBe(true);
+    s.openObjective();
+    expect(s.acceptMission()).toBe(true);
+    return store;
+  }
+
+  it('creates an empty design when the mission is accepted', () => {
+    const store = assemblyStore();
+    const s = store.getState();
+    expect(s.phase).toBe('ASSEMBLY');
+    expect(s.design).toEqual({
+      busId: null,
+      slots: {
+        power: null, battery: null, computer: null, adcs: null, comms: null, propulsion: null,
+        radiation: null, thermal: null, lifeSupport: null, habitat: null, heatShield: null,
+      },
+      instrumentIds: [],
+      options: { fuelMass: 0, supplyDays: 0, spinArmLength: 0 },
+    });
+    expect(s.decisionLog).toEqual([]);
+  });
+
+  it('has no design state before a mission is chosen', () => {
+    const store = createGameStore();
+    const s = store.getState();
+    s.goTo('TITLE');
+    expect(s.design).toBeNull();
+    expect(s.editDesign({ kind: 'equip', slot: 'power', partId: 'solar_small' })).toBe(false);
+    s.undoDesign(); // must not throw without a design
+    s.redoDesign();
+    expect(s.design).toBeNull();
+  });
+
+  it('equips a part, logs the decision with resource deltas, and supports undo/redo', () => {
+    const store = assemblyStore();
+
+    expect(store.getState().editDesign({ kind: 'bus', partId: 'capsule_crew' })).toBe(true);
+    expect(store.getState().design?.busId).toBe('capsule_crew');
+
+    expect(store.getState().editDesign({ kind: 'equip', slot: 'power', partId: 'solar_crew' })).toBe(true);
+    expect(store.getState().design?.slots.power).toBe('solar_crew');
+
+    // The decision log recorded both choices with the acting role and deltas.
+    const { decisionLog } = store.getState();
+    expect(decisionLog).toHaveLength(2);
+    const busEntry = decisionLog[0];
+    expect(busEntry.actor).toBe('engineer');
+    expect(busEntry.kind).toBe('bus');
+    expect(busEntry.partName).toBe('Crew capsule (2 seats)');
+    expect(busEntry.deltas.mass).toBeGreaterThan(0);
+    expect(busEntry.deltas.cost).toBeGreaterThan(0);
+    const powerEntry = decisionLog[1];
+    expect(powerEntry.actor).toBe('engineer');
+    expect(powerEntry.slotId).toBe('power');
+    expect(powerEntry.deltas.mass).toBeGreaterThan(0); // the array itself has mass
+    // Solar arrays draw no power themselves, so the load doesn't change.
+    expect(powerEntry.deltas.power).toBeUndefined();
+
+    // Undo restores the previous design, redo brings it back.
+    store.getState().undoDesign();
+    expect(store.getState().design?.slots.power).toBeNull();
+    store.getState().redoDesign();
+    expect(store.getState().design?.slots.power).toBe('solar_crew');
+    // Undo/redo never add decision-log entries.
+    expect(store.getState().decisionLog).toHaveLength(2);
+  });
+
+  it('rejects changes that are invalid or no-ops', () => {
+    const store = assemblyStore();
+    const s = store.getState();
+    expect(s.editDesign({ kind: 'equip', slot: 'power', partId: 'comms_ka' })).toBe(false);
+    expect(s.editDesign({ kind: 'bus', partId: 'solar_small' })).toBe(false);
+    expect(store.getState().decisionLog).toHaveLength(0);
+    s.editDesign({ kind: 'bus', partId: 'capsule_crew' });
+    const logLength = store.getState().decisionLog.length;
+    expect(s.editDesign({ kind: 'bus', partId: 'capsule_crew' })).toBe(false);
+    expect(store.getState().decisionLog).toHaveLength(logLength);
+  });
+
+  it('records instrument decisions for the science role', () => {
+    const store = assemblyStore();
+    store.getState().editDesign({ kind: 'bus', partId: 'capsule_crew' });
+    store.getState().editDesign({ kind: 'equip', slot: 'computer', partId: 'computer_standard' });
+    store.getState().editDesign({ kind: 'equip', slot: 'comms', partId: 'comms_sband' });
+    store.getState().editDesign({ kind: 'addInstrument', partId: 'inst_imager' });
+    const { decisionLog } = store.getState();
+    const entry = decisionLog[3];
+    expect(entry.actor).toBe('science');
+    expect(entry.kind).toBe('addInstrument');
+    // Science only counts once the data can get home and the craft can live.
+    expect(entry.deltas.science).toBeGreaterThan(0);
+    expect(entry.deltas.data).toBeGreaterThan(0);
+    store.getState().editDesign({ kind: 'removeInstrument', partId: 'inst_imager' });
+    const removal = store.getState().decisionLog[4];
+    expect(removal.kind).toBe('removeInstrument');
+    expect(removal.partName).toBe('Multispectral imager');
+  });
+
+  it('gates ERB_REVIEW to TRAJECTORY until all mandatory review checks pass', () => {
+    const store = assemblyStore();
+    expect(store.getState().submitToErb()).toBe(true);
+    expect(store.getState().phase).toBe('ERB_REVIEW');
+    // An empty design fails ERB-0 and cannot proceed to TRAJECTORY.
+    expect(store.getState().proceedFromErb()).toBe(false);
+    expect(store.getState().phase).toBe('ERB_REVIEW');
+
+    // Return to assembly and build a winning LEO design.
+    expect(store.getState().goTo('ASSEMBLY')).toBe(true);
+    const s = store.getState();
+    s.editDesign({ kind: 'bus', partId: 'capsule_crew' });
+    s.editDesign({ kind: 'equip', slot: 'power', partId: 'solar_crew' });
+    s.editDesign({ kind: 'equip', slot: 'battery', partId: 'battery_medium' });
+    s.editDesign({ kind: 'equip', slot: 'computer', partId: 'computer_standard' });
+    s.editDesign({ kind: 'equip', slot: 'adcs', partId: 'adcs_wheels' });
+    s.editDesign({ kind: 'equip', slot: 'comms', partId: 'comms_sband' });
+    s.editDesign({ kind: 'equip', slot: 'propulsion', partId: 'prop_biprop' });
+    s.editDesign({ kind: 'equip', slot: 'thermal', partId: 'thermal_basic' });
+    s.editDesign({ kind: 'equip', slot: 'lifeSupport', partId: 'ls_stored' });
+    s.editDesign({ kind: 'equip', slot: 'heatShield', partId: 'shield_leo' });
+    s.editDesign({ kind: 'addInstrument', partId: 'inst_imager' });
+    s.editDesign({ kind: 'option', key: 'fuelMass', value: 520 });
+    s.editDesign({ kind: 'option', key: 'supplyDays', value: 6 });
+
+    expect(store.getState().submitToErb()).toBe(true);
+    expect(store.getState().proceedFromErb()).toBe(true);
+    expect(store.getState().phase).toBe('TRAJECTORY');
+  });
+
+  it('choosing a new pathway clears the design and its history', () => {
+    const store = assemblyStore();
+    store.getState().editDesign({ kind: 'bus', partId: 'capsule_crew' });
+    expect(store.getState().design).not.toBeNull();
+    // Back through the objective screen (ASSEMBLY → OBJECTIVE → CHAPTER_SELECT).
+    store.getState().openObjective();
+    store.getState().backToMap();
+    expect(store.getState().selectPathway('leo')).toBe(true);
+    expect(store.getState().design).toBeNull();
+    expect(store.getState().decisionLog).toEqual([]);
+  });
+
+  it('keeps the design out of the persisted save', () => {
+    const storage = memoryStorage();
+    const store = createGameStore({ storage });
+    const s = store.getState();
+    s.goTo('TITLE');
+    s.goTo('CHAPTER_SELECT');
+    s.selectPathway('leo');
+    s.openObjective();
+    s.acceptMission();
+    s.editDesign({ kind: 'bus', partId: 'capsule_crew' });
+    const saved = JSON.parse(storage.data[SETTINGS_STORAGE_KEY]);
+    expect(Object.keys(saved.state).sort()).toEqual(['profile', 'settings']);
+  });
+});

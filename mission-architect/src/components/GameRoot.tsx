@@ -8,14 +8,17 @@ import { useGame } from '@/hooks/useGame';
 import { CutsceneOverlay } from '@/cutscenes/CutsceneOverlay';
 import { BriefingCutscene, ObjectiveScene } from '@/scenes/Briefing/BriefingScenes';
 import { ObjectivePanel } from '@/scenes/Briefing/ObjectivePanel';
+import { HangarScene } from '@/scenes/Hangar/HangarScene';
 import { PathwayHud } from '@/scenes/PathwayMap/PathwayHud';
 import { PathwayMapScene } from '@/scenes/PathwayMap/PathwayMapScene';
 import { ModelPreviewScene } from '@/scenes/ModelPreview/ModelPreviewScene';
 import { PrologueHud } from '@/scenes/Prologue/PrologueHud';
 import { PrologueScene } from '@/scenes/Prologue/PrologueScene';
 import { TitleScene } from '@/scenes/Title/TitleScene';
+import { AssemblyHud } from '@/ui/AssemblyHud';
 import { Loader } from '@/ui/Loader';
 import { PreviewHud } from '@/ui/PreviewHud';
+import { ReviewBoard } from '@/ui/ReviewBoard';
 import { SettingsDialog } from '@/ui/SettingsDialog';
 import { TitleMenu } from '@/ui/TitleMenu';
 import { WebGLFallback } from '@/ui/WebGLFallback';
@@ -47,6 +50,7 @@ function SceneSwitch() {
   if (phase === 'CHAPTER_SELECT') return <PathwayMapScene />;
   if (phase === 'BRIEFING') return <BriefingCutscene />;
   if (phase === 'OBJECTIVE') return <ObjectiveScene />;
+  if (phase === 'ASSEMBLY' || phase === 'ERB_REVIEW') return <HangarScene />;
   // Later phases get their own scenes as they are built.
   return <ModelPreviewScene />;
 }
@@ -71,7 +75,9 @@ function HudLayer() {
       {phase === 'CHAPTER_SELECT' && <PathwayHud />}
       {phase === 'BRIEFING' && <CutsceneOverlay />}
       {phase === 'OBJECTIVE' && <ObjectivePanel />}
-      {!['BOOT', 'TITLE', 'PROLOGUE', 'CHAPTER_SELECT', 'BRIEFING', 'OBJECTIVE'].includes(phase) && <PreviewHud />}
+      {phase === 'ASSEMBLY' && <AssemblyHud />}
+      {phase === 'ERB_REVIEW' && <ReviewBoard />}
+      {!['BOOT', 'TITLE', 'PROLOGUE', 'CHAPTER_SELECT', 'BRIEFING', 'OBJECTIVE', 'ASSEMBLY', 'ERB_REVIEW'].includes(phase) && <PreviewHud />}
       <SettingsDialog />
     </div>
   );

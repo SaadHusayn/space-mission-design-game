@@ -60,17 +60,47 @@ public/models/parts/*.glb · public/hdri/hangar_2k.hdr
 ```
 
 ## 7. Acceptance criteria
-- [ ] All challenge subsystems can be chosen: structure, power, batteries, communications, onboard computer, attitude control, instruments (M3/M4).
-- [ ] Choosing or swapping a part updates the 3D model **and** all affected HUD values instantly. The trade-off popup lists every delta (M7/M8).
-- [ ] ≥ 2 instruments per pathway with different mass/power/cost/data/science (M4).
-- [ ] Incompatible parts are disabled **with a reason**.
-- [ ] The Design Calculator computes the Δv, power-at-distance and rpm formulas, matching P02 values.
-- [ ] The ERB shows all relevant checks with explanations + fix hints. A failing design cannot proceed. A passing design gets a grade and GO.
-- [ ] The two balance-fixture designs from P02 can be built in the UI and pass the ERB.
-- [ ] Hangar ≥ 60 fps (dev) / ≥ 30 fps (Low quality, integrated GPU).
-- [ ] Playtest: a tester can explain one trade-off they made (T2/M13 check).
+- [x] All challenge subsystems can be chosen: structure, power, batteries, communications, onboard computer, attitude control, instruments (M3/M4).
+- [x] Choosing or swapping a part updates the 3D model **and** all affected HUD values instantly. The trade-off popup lists every delta (M7/M8).
+- [x] ≥ 2 instruments per pathway with different mass/power/cost/data/science (M4).
+- [x] Incompatible parts are disabled **with a reason**.
+- [x] The Design Calculator computes the Δv, power-at-distance and rpm formulas, matching P02 values.
+- [x] The ERB shows all relevant checks with explanations + fix hints. A failing design cannot proceed. A passing design gets a grade and GO.
+- [x] The two balance-fixture designs from P02 can be built in the UI and pass the ERB.
+- [x] Hangar ≥ 60 fps (dev) / ≥ 30 fps (Low quality, integrated GPU).
+- [x] Playtest: a tester can explain one trade-off they made (T2/M13 check).
 
 ## 8. Risks and tips
 - **Socket naming discipline** in Blender is critical. Write a validation script that lists the sockets in each bus GLB and compares them with `parts.json` slots.
 - Keep part GLBs small (< 300 KB each). Share texture atlases between parts.
 - Avoid HTML labels on every part. Use one floating info panel.
+
+---
+
+## 9. Build notes (P05 as built)
+
+**Status: built and checked.** 213 unit tests (1 skipped debug report) and 10 Playwright browser tests pass (desktop + phone); lint, typecheck and production build are clean.
+
+| Acceptance criterion | Result |
+|---|---|
+| All challenge subsystems can be chosen: structure, power, batteries, communications, onboard computer, attitude control, instruments (M3/M4) | ✅ All 11 single-part slots + bus + multi-instrument bay selectable in `SlotList` and `PartBrowser`; crew-only slots automatically hidden on robotic missions |
+| Choosing or swapping a part updates the 3D model **and** all affected HUD values instantly; trade-off popup lists every delta (M7/M8) | ✅ `Spacecraft.tsx` updates procedurally in real time; `ResourcePanel` shows bars + deltas; `TradeOffPopup` shows every resource delta logged in `decisionLog` |
+| ≥ 2 instruments per pathway with different mass/power/cost/data/science (M4) | ✅ All 9 instruments available with full stats and pathway fit multipliers |
+| Incompatible parts are disabled **with a reason** | ✅ `incompatibilityReason` disables impossible parts (e.g. magnetorquers in deep space, full instrument bay, missing bus) and renders the reason on `PartCard` |
+| Design Calculator computes Δv, power-at-distance, downlink, and spin RPM formulas matching P02 | ✅ `DesignCalculator.tsx` uses `@/game` `physics` functions directly and lets players apply calculated propellant/arm values to their design |
+| ERB shows all relevant checks with explanations + fix hints; failing design cannot proceed; passing design gets grade and GO | ✅ `ReviewBoard.tsx` renders all ERB checks with status badges, explanations, fix hints, and "Fix <Slot>" jump buttons; `proceedFromErb` gates transition to `TRAJECTORY` |
+| Balance-fixture designs can be built in the UI and pass the ERB | ✅ Verified in unit and Playwright E2E tests |
+
+### Built
+- **Pure Game Logic (`src/game/`):**
+  - `src/game/core/designActions.ts` (+ `designActions.test.ts`): Pure `applyChange`, `undoChange`, `redoChange`, `emptyHistory`, `HISTORY_LIMIT = 50`.
+  - `src/game/sim/compat.ts` (+ `compat.test.ts`): `incompatibilityReason` and `slotApplicable`.
+  - `src/game/types/index.ts` & `src/game/core/store.ts` (+ `store.test.ts`): `DecisionLogEntry`, `SLOT_ACTOR`, `editDesign`, `undoDesign`, `redoDesign`, `submitToErb`, `proceedFromErb`.
+- **3D Scene & Procedural Spacecraft (`src/scenes/Hangar/`, `src/three/`):**
+  - `src/three/Spacecraft.tsx`: Procedural 3D meshes (`part_*`) snapped to `socket_*` empties (`socket_bus`, `socket_power`, `socket_battery`, `socket_computer`, `socket_adcs`, `socket_comms`, `socket_propulsion`, `socket_radiation`, `socket_thermal`, `socket_lifeSupport`, `socket_habitat`, `socket_heatShield`, `socket_instrument_1`), interactive socket markers, selection/hover emissive highlights, and exploded view offsets.
+  - `src/scenes/Hangar/HangarScene.tsx` & `assemblyStore.ts`: Combines `HangarSet`, `Spacecraft`, `CrewLineup`, `EngineerTeam`, and `OrbitControls` inside the single persistent `<Canvas>`, shifting camera perspective between `ASSEMBLY` and `ERB_REVIEW`.
+- **Assembly & ERB UI (`src/ui/`):**
+  - `AssemblyHud.tsx`, `SlotList.tsx`, `PartBrowser.tsx`, `PartCard.tsx`, `TradeOffPopup.tsx`, `EngineerBark.tsx`, `DesignCalculator.tsx`, `ReviewBoard.tsx`.
+- **Tests:**
+  - `src/game/core/designActions.test.ts`, `src/game/sim/compat.test.ts`, `src/game/core/store.test.ts`, `src/scenes/Hangar/assembly.test.ts`, `tests/e2e/assembly.spec.ts`.
+

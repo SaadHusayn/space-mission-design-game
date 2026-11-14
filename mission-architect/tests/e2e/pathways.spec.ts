@@ -49,7 +49,7 @@ test('pathway map: locked chapters, briefing, objective and assembly hand-off', 
   await snap(page, 'p04-04-objective');
 
   await page.getByRole('button', { name: 'START DESIGN' }).click();
-  await expect(page.getByRole('heading', { name: 'Assembly bay' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /First Light: Assembly Bay/ })).toBeVisible();
   await page.getByRole('button', { name: 'BACK TO OBJECTIVE' }).click();
   await page.getByRole('button', { name: 'BACK TO MAP' }).click();
   await expect(page.getByText('Choose your pathway')).toBeVisible();

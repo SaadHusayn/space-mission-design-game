@@ -26,4 +26,7 @@ export { explainMission, type WhyBullet } from './sim/why';
 export { WINNING_DESIGNS, makeDesign, type DesignFixture } from './sim/fixtures/designs';
 export { challengesFor, generateChallenge, physicsMastery, PATHWAY_CHALLENGES } from './challenges/generator';
 export type { Challenge, ChallengeOption, ChallengeResult, ChallengeTopic, ChallengeConsequence } from './challenges/types';
+export { applyChange, emptyHistory, redoChange, undoChange, HISTORY_LIMIT, type DesignChange, type DesignHistory } from './core/designActions';
+export { SLOT_ACTOR } from './core/store';
+export { incompatibilityReason, slotApplicable } from './sim/compat';
 export * as physics from './physics';
