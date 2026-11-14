@@ -18,6 +18,7 @@ import { isUnlocked, recordResult, sanitiseProgress, type Progress } from './pro
 import { isPrologueStep, nextPrologueStep, type PrologueStep } from './prologue';
 import { summarizeDesign } from '../sim/design';
 import { createMission } from '../sim/mission';
+import { reviewDesign } from '../sim/review';
 
 export type Quality = 'low' | 'high';
 
@@ -95,6 +96,11 @@ export interface GameState {
   /** Steps the design back/forward one change. Does not touch the decision log. */
   undoDesign: () => void;
   redoDesign: () => void;
+
+  /** Moves to the Engineering Review Board (from ASSEMBLY). */
+  submitToErb: () => boolean;
+  /** Proceeds from ERB_REVIEW to TRAJECTORY only when the design passes every mandatory ERB check. */
+  proceedFromErb: () => boolean;
 
   setCrew: (crew: CrewMember[]) => void;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -300,6 +306,18 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
       if (!state.design) return;
       const next = redoChange({ past: state.designPast, present: state.design, future: state.designFuture });
       set({ design: next.present, designPast: next.past, designFuture: next.future });
+    },
+    submitToErb: () => {
+      const state = get();
+      if (!state.design || !state.mission) return false;
+      return state.goTo('ERB_REVIEW');
+    },
+    proceedFromErb: () => {
+      const state = get();
+      if (state.phase !== 'ERB_REVIEW' || !state.design || !state.mission) return false;
+      const review = reviewDesign(state.design, missionContextOf(state));
+      if (!review.passable) return false;
+      return state.goTo('TRAJECTORY');
     },
 
     setCrew: (crew) => set((state) => ({ profile: { ...state.profile, crew: crew.map((member) => ({ ...member, roles: [...member.roles] })) } })),
