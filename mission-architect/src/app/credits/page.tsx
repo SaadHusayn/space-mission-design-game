@@ -15,7 +15,7 @@ const ASSETS = [
   },
   {
     name: "Placeholder spacecraft model",
-    author: "TRAJECTORY team",
+    author: "Mission Architect team",
     licence: "Original work",
     href: null,
     note: "Generated in code (scripts/build-placeholder-models.mjs).",
@@ -41,7 +41,7 @@ export default function CreditsPage() {
       </Link>
       <h1 className="mt-6 text-4xl font-extrabold tracking-wide">Credits</h1>
       <p className="mt-4 leading-relaxed text-muted">
-        TRAJECTORY: Pathways Beyond is an independent student project made for
+        Mission Architect: Pathways to the Stars is an independent student project made for
         the NASA Space Apps Challenge 2026. It is not affiliated with or
         endorsed by NASA or any other space agency. The Orbital Exploration
         Agency and all characters in the game are fictional. Physics in the

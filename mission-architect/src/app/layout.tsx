@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "TRAJECTORY: Pathways Beyond",
-    template: "%s · TRAJECTORY",
+    default: "Mission Architect: Pathways to the Stars",
+    template: "%s · Mission Architect",
   },
   description:
     "A 3D space mission design game. Join the astronaut class, design a spacecraft with the engineers, launch it, and find out how every trade-off shaped your mission.",

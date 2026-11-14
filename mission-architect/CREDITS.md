@@ -1,6 +1,6 @@
 # Credits and licences
 
-TRAJECTORY: Pathways Beyond is an independent student project made for the NASA Space Apps Challenge 2026
+Mission Architect: Pathways to the Stars is an independent student project made for the NASA Space Apps Challenge 2026
 ("Space Mission Design Game"). It is **not affiliated with or endorsed by NASA** or any other space agency.
 The Orbital Exploration Agency and all characters are fictional. No agency logos are used.
 
@@ -16,7 +16,7 @@ Every external asset must be listed here **before** it is committed.
 
 | File | Source | Licence |
 |---|---|---|
-| `public/models/probe_placeholder.glb` | Generated in code by `scripts/build-placeholder-models.mjs` (TRAJECTORY team) | Original work |
+| `public/models/probe_placeholder.glb` | Generated in code by `scripts/build-placeholder-models.mjs` (Mission Architect team) | Original work |
 
 ## Fonts
 

@@ -1,4 +1,4 @@
-# TRAJECTORY: Pathways Beyond
+# Mission Architect: Pathways to the Stars
 
 A 3D space mission design game for the **NASA Space Apps Challenge 2026** ("Space Mission Design Game").
 

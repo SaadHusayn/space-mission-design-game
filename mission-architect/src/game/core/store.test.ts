@@ -79,3 +79,26 @@ describe('game store', () => {
     expect(store.getState().settings).toEqual({ quality: 'low', reducedMotion: true });
   });
 });
+
+describe('save migration after the rename', () => {
+  it('moves a save from the old key to the new one, once', async () => {
+    const { LEGACY_STORAGE_KEYS, migrateLegacySave } = await import('./store');
+    const data: Record<string, string> = { [LEGACY_STORAGE_KEYS[0]]: JSON.stringify({ state: { settings: { quality: 'low', reducedMotion: true } }, version: 2 }) };
+    const storage = {
+      getItem: (key: string) => data[key] ?? null,
+      setItem: (key: string, value: string) => {
+        data[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete data[key];
+      },
+    };
+    const store = createGameStore({ storage });
+    expect(store.getState().settings).toEqual({ quality: 'low', reducedMotion: true });
+    expect(data[LEGACY_STORAGE_KEYS[0]]).toBeUndefined();
+    expect(data[SETTINGS_STORAGE_KEY]).toBeDefined();
+    data[LEGACY_STORAGE_KEYS[0]] = 'stale';
+    migrateLegacySave(storage);
+    expect(data[LEGACY_STORAGE_KEYS[0]]).toBe('stale');
+  });
+});

@@ -46,7 +46,8 @@ test('title fits a phone screen @phone', async ({ page }, testInfo) => {
 
 test('landing and credits pages work', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'TRAJECTORY' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'MISSION ARCHITECT' })).toBeVisible();
+  await expect(page.getByText('PATHWAYS TO THE STARS')).toBeVisible();
   await expect(page.getByText(/not affiliated with or endorsed by NASA/)).toBeVisible();
   await page.getByRole('link', { name: 'Credits' }).click();
   await expect(page.getByText('Solar System Scope')).toBeVisible();

@@ -97,7 +97,7 @@ const quatZ90 = [0, 0, Math.SQRT1_2, Math.SQRT1_2]; // +Y axis -> -X
 
 async function buildProbe() {
   const doc = new Document();
-  doc.getRoot().getAsset().generator = 'TRAJECTORY placeholder generator';
+  doc.getRoot().getAsset().generator = 'Mission Architect placeholder generator';
   const buffer = doc.createBuffer();
   const scene = doc.createScene('probe_placeholder');
 

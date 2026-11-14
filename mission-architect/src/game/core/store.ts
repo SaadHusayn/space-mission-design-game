@@ -83,7 +83,22 @@ export interface GameStoreOptions {
   prefersReducedMotion?: boolean;
 }
 
-export const SETTINGS_STORAGE_KEY = 'trajectory:settings';
+export const SETTINGS_STORAGE_KEY = 'mission-architect:save';
+/** Save key used before the game was renamed (moved to the new key on first load). */
+export const LEGACY_STORAGE_KEYS = ['trajectory:settings'] as const;
+
+/** Copies a save from an old key to the current one, once. */
+export function migrateLegacySave(storage: StateStorage): void {
+  if (storage.getItem(SETTINGS_STORAGE_KEY) !== null) return;
+  for (const key of LEGACY_STORAGE_KEYS) {
+    const old = storage.getItem(key);
+    if (typeof old === 'string') {
+      storage.setItem(SETTINGS_STORAGE_KEY, old);
+      storage.removeItem(key);
+      return;
+    }
+  }
+}
 
 export function defaultProfile(): Profile {
   return { crew: createCrew(1), difficulty: 'engineer', patch: { ...DEFAULT_PATCH }, prologueDone: false, seenCutscenes: [], progress: {} };
@@ -178,6 +193,7 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
   });
 
   if (!storage) return createStore<GameState>()(initializer);
+  migrateLegacySave(storage);
 
   return createStore<GameState>()(
     persist(initializer, {

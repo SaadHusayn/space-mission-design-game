@@ -49,7 +49,7 @@ export async function openGraduated(
       progress: saved,
     };
     localStorage.setItem(
-      'trajectory:settings',
+      'mission-architect:save',
       JSON.stringify({ state: { settings: { quality: 'high', reducedMotion: false }, profile }, version: 2 }),
     );
   }, progress);

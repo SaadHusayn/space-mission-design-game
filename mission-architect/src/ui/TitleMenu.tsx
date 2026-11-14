@@ -15,10 +15,12 @@ export function TitleMenu() {
     <div className="absolute inset-0 flex flex-col justify-start p-6 sm:justify-center sm:p-14 lg:p-20">
       <div className="hud-enter pointer-events-auto max-w-xl">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-accent">Orbital Exploration Agency</p>
-        <h1 className="mt-3 text-5xl font-extrabold tracking-[0.14em] text-ink [text-shadow:0_0_40px_rgb(92_225_255/0.35)] sm:text-7xl">
-          TRAJECTORY
+        <h1 className="mt-3 text-5xl font-extrabold leading-[1.05] tracking-[0.1em] text-ink [text-shadow:0_0_40px_rgb(92_225_255/0.35)] sm:text-7xl">
+          MISSION
+          <br />
+          ARCHITECT
         </h1>
-        <p className="mt-2 text-lg font-medium tracking-[0.34em] text-muted sm:text-2xl">PATHWAYS BEYOND</p>
+        <p className="mt-3 text-lg font-medium tracking-[0.3em] text-muted sm:text-2xl">PATHWAYS TO THE STARS</p>
         <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/90">Design it. Launch it. Prove it with physics.</p>
         <div className="mt-9 flex flex-wrap gap-4">
           {graduated && <Button onClick={() => goTo('CHAPTER_SELECT')}>CONTINUE</Button>}

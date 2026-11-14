@@ -113,7 +113,7 @@ test('the whole prologue: cutscenes, crew setup, training and graduation', async
   await expect(page.getByText('Choose your pathway')).toBeVisible();
   await expect(page.getByRole('img', { name: /planet/ })).toBeVisible();
   await snap(page, '13-mission-control');
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('trajectory:settings') ?? '{}'));
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('mission-architect:save') ?? '{}'));
   expect(saved.state.profile.prologueDone).toBe(true);
   expect(saved.state.profile.difficulty).toBe('cadet');
   expect(saved.state.profile.patch.symbol).toBe('planet');

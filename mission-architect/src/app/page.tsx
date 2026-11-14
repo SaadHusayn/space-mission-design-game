@@ -11,11 +11,11 @@ export default function Home() {
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-accent">
           A space mission design game
         </p>
-        <h1 className="mt-4 text-5xl font-extrabold tracking-[0.14em] sm:text-7xl">
-          TRAJECTORY
+        <h1 className="mt-4 text-5xl font-extrabold tracking-[0.12em] sm:text-7xl">
+          MISSION ARCHITECT
         </h1>
         <p className="mt-2 text-xl font-medium tracking-[0.3em] text-muted sm:text-2xl">
-          PATHWAYS BEYOND
+          PATHWAYS TO THE STARS
         </p>
         <p className="mt-8 text-lg leading-relaxed text-muted">
           Join the astronaut class. Design a spacecraft with the engineers,

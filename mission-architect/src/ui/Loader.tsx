@@ -17,7 +17,7 @@ export function Loader() {
         booting ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >
-      <p className="text-3xl font-extrabold tracking-[0.3em] text-ink sm:text-4xl">TRAJECTORY</p>
+      <p className="text-3xl font-extrabold tracking-[0.3em] text-ink sm:text-4xl">MISSION ARCHITECT</p>
       <div
         role="progressbar"
         aria-label="Loading"
