@@ -1,0 +1,78 @@
+[
+  {
+    "id": "lv_light",
+    "name": "Light lifter",
+    "description": "Small and cheap. Good for light satellites in Earth orbit.",
+    "cost": 30,
+    "thrust": 1200000,
+    "liftoffMass": 90000,
+    "maxG": 6,
+    "capacity": {
+      "LEO": 3000,
+      "SSO": 2400,
+      "TLI": 700,
+      "TMI": 500,
+      "TJI": 150,
+      "EGA": 400,
+      "L2": 800,
+      "ESCAPE": 100
+    }
+  },
+  {
+    "id": "lv_medium",
+    "name": "Medium lifter",
+    "description": "The most common rocket. Carries medium robotic missions almost anywhere.",
+    "cost": 70,
+    "thrust": 7600000,
+    "liftoffMass": 500000,
+    "maxG": 5,
+    "capacity": {
+      "LEO": 8000,
+      "SSO": 6500,
+      "TLI": 2800,
+      "TMI": 2200,
+      "TJI": 900,
+      "EGA": 2200,
+      "L2": 2600,
+      "ESCAPE": 500
+    }
+  },
+  {
+    "id": "lv_heavy",
+    "name": "Heavy lifter",
+    "description": "A big rocket for crews and heavy probes.",
+    "cost": 150,
+    "thrust": 22000000,
+    "liftoffMass": 1400000,
+    "maxG": 4.5,
+    "capacity": {
+      "LEO": 50000,
+      "SSO": 42000,
+      "TLI": 18000,
+      "TMI": 14000,
+      "TJI": 5000,
+      "EGA": 12000,
+      "L2": 17000,
+      "ESCAPE": 3500
+    }
+  },
+  {
+    "id": "lv_superheavy",
+    "name": "Super-heavy lifter with orbital refuelling (concept)",
+    "description": "A mission concept: a giant rocket refuelled in Earth orbit before heading out. Real crewed Mars plans need several launches; the game treats it as one.",
+    "cost": 400,
+    "thrust": 70000000,
+    "liftoffMass": 5000000,
+    "maxG": 4,
+    "capacity": {
+      "LEO": 150000,
+      "SSO": 120000,
+      "TLI": 110000,
+      "TMI": 100000,
+      "TJI": 40000,
+      "EGA": 80000,
+      "L2": 105000,
+      "ESCAPE": 25000
+    }
+  }
+]

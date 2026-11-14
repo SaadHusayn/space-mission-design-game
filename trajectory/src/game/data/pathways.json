@@ -1,0 +1,509 @@
+[
+  {
+    "id": "leo",
+    "chapter": 1,
+    "name": "First Light",
+    "destination": "Low Earth orbit",
+    "objective": "Fly a crew of two into orbit, photograph Earth's weather and climate, and bring them home safely.",
+    "hazards": [
+      "To stay in orbit you need about 7.7 km/s of sideways speed.",
+      "In low orbit you spend about 36 minutes of every 92-minute lap in Earth's shadow.",
+      "Coming home, the capsule hits the air at about 7.8 km/s."
+    ],
+    "crewed": true,
+    "crewSize": 2,
+    "budget": 900,
+    "scienceTarget": 30,
+    "requiredInstruments": [
+      [
+        "camera",
+        "imager"
+      ]
+    ],
+    "returnEntrySpeed": 7.8,
+    "critical": [
+      "mass",
+      "power"
+    ],
+    "orbit": {
+      "body": "earth",
+      "altitudeKm": 400
+    },
+    "environment": {
+      "launchTarget": "LEO",
+      "launchCapacityFactor": 1,
+      "deltaV": 200,
+      "cruiseDays": 0,
+      "operationsDays": 5,
+      "returnDays": 0,
+      "sunDistanceAU": 1,
+      "earthDistanceAU": 2.7e-06,
+      "eclipseHours": 0.6,
+      "eclipseFraction": 0.38,
+      "contactHoursPerDay": 8,
+      "cruiseElectronicsDose": 0.0005,
+      "operationsElectronicsDose": 0.0005,
+      "crewDosePerDay": 0.5,
+      "scienceMultiplier": 1,
+      "operationsCostPerYear": 100
+    },
+    "trajectories": [
+      {
+        "id": "leo_400",
+        "name": "Station altitude (400 km)",
+        "summary": "The same height as the International Space Station.",
+        "pros": [
+          "Easy to reach",
+          "Close, detailed views of Earth"
+        ],
+        "cons": [
+          "Air drag slowly pulls you down, so you must boost often"
+        ],
+        "overrides": {},
+        "tags": []
+      },
+      {
+        "id": "leo_550",
+        "name": "Higher orbit (550 km)",
+        "summary": "Above most of the air drag.",
+        "pros": [
+          "Less boosting: about 50 m/s less Δv"
+        ],
+        "cons": [
+          "The rocket carries 7% less",
+          "More radiation for the crew",
+          "Less detail in photos"
+        ],
+        "overrides": {
+          "deltaV": 150,
+          "launchCapacityFactor": 0.93,
+          "crewDosePerDay": 0.8,
+          "scienceMultiplier": 0.9
+        },
+        "tags": []
+      }
+    ]
+  },
+  {
+    "id": "moon",
+    "chapter": 2,
+    "name": "Return to the Moon",
+    "destination": "Lunar orbit",
+    "objective": "Orbit the Moon with a crew of two and map water ice hiding in the dark craters near its poles.",
+    "hazards": [
+      "The trip takes about 3 days each way.",
+      "Getting into lunar orbit and back out again costs about 2 km/s of Δv.",
+      "Coming home from the Moon, the capsule hits the air at about 11 km/s."
+    ],
+    "crewed": true,
+    "crewSize": 2,
+    "budget": 1100,
+    "scienceTarget": 32,
+    "requiredInstruments": [
+      [
+        "radar",
+        "imager"
+      ]
+    ],
+    "returnEntrySpeed": 11,
+    "critical": [
+      "mass",
+      "power"
+    ],
+    "orbit": {
+      "body": "moon",
+      "altitudeKm": 100
+    },
+    "environment": {
+      "launchTarget": "TLI",
+      "launchCapacityFactor": 1,
+      "deltaV": 2100,
+      "cruiseDays": 3,
+      "operationsDays": 7,
+      "returnDays": 3,
+      "sunDistanceAU": 1,
+      "earthDistanceAU": 0.00257,
+      "eclipseHours": 0.8,
+      "eclipseFraction": 0.4,
+      "contactHoursPerDay": 12,
+      "cruiseElectronicsDose": 0.002,
+      "operationsElectronicsDose": 0.002,
+      "crewDosePerDay": 1.4,
+      "scienceMultiplier": 1,
+      "operationsCostPerYear": 100
+    },
+    "trajectories": [
+      {
+        "id": "moon_polar",
+        "name": "Polar orbit",
+        "summary": "Fly over both poles on every lap, right above the ice.",
+        "pros": [
+          "Sees the polar craters directly on every orbit"
+        ],
+        "cons": [
+          "Costs more Δv to reach"
+        ],
+        "overrides": {},
+        "tags": []
+      },
+      {
+        "id": "moon_equatorial",
+        "name": "Equatorial orbit",
+        "summary": "Circle the Moon's middle, like the Apollo missions.",
+        "pros": [
+          "Cheaper: about 300 m/s less Δv"
+        ],
+        "cons": [
+          "Never flies over the poles, so the ice is only seen from far away at an angle"
+        ],
+        "overrides": {
+          "deltaV": 1800,
+          "scienceMultiplier": 0.6
+        },
+        "tags": []
+      }
+    ]
+  },
+  {
+    "id": "mars",
+    "chapter": 3,
+    "name": "The Long Road",
+    "destination": "Mars orbit",
+    "objective": "Carry a crew of four into orbit around Mars to study its thin atmosphere, then bring them home.",
+    "hazards": [
+      "About 259 days each way on the most efficient path.",
+      "Sunlight at Mars is only 43% as strong as at Earth.",
+      "Radio messages take 3 to 22 minutes each way.",
+      "More than a year in deep space: cosmic radiation and weightlessness harm the crew."
+    ],
+    "crewed": true,
+    "crewSize": 4,
+    "budget": 3800,
+    "scienceTarget": 45,
+    "requiredInstruments": [
+      [
+        "spectrometer"
+      ]
+    ],
+    "returnEntrySpeed": 12.5,
+    "critical": [
+      "mass",
+      "time",
+      "comms"
+    ],
+    "orbit": {
+      "body": "mars",
+      "altitudeKm": 300
+    },
+    "environment": {
+      "launchTarget": "TMI",
+      "launchCapacityFactor": 1,
+      "deltaV": 3000,
+      "cruiseDays": 259,
+      "operationsDays": 30,
+      "returnDays": 300,
+      "sunDistanceAU": 1.524,
+      "earthDistanceAU": 2.68,
+      "eclipseHours": 1,
+      "eclipseFraction": 0.3,
+      "contactHoursPerDay": 8,
+      "cruiseElectronicsDose": 0.002,
+      "operationsElectronicsDose": 0.002,
+      "crewDosePerDay": 1.8,
+      "scienceMultiplier": 1,
+      "operationsCostPerYear": 150
+    },
+    "trajectories": [
+      {
+        "id": "mars_hohmann",
+        "name": "Most efficient transfer",
+        "summary": "The classic Hohmann transfer: the least fuel, the longest trip.",
+        "pros": [
+          "Least Δv: about 3 km/s to arrive and leave"
+        ],
+        "cons": [
+          "About 259 days out and 300 days back"
+        ],
+        "overrides": {},
+        "tags": []
+      },
+      {
+        "id": "mars_fast",
+        "name": "Fast transfer",
+        "summary": "Burn harder to arrive sooner.",
+        "pros": [
+          "About 180 days out and 200 back: less radiation, fewer supplies, less bone loss"
+        ],
+        "cons": [
+          "Needs about 1.2 km/s more Δv",
+          "The rocket carries 15% less"
+        ],
+        "overrides": {
+          "deltaV": 4200,
+          "cruiseDays": 180,
+          "returnDays": 200,
+          "launchCapacityFactor": 0.85
+        },
+        "tags": []
+      }
+    ]
+  },
+  {
+    "id": "jupiter",
+    "chapter": 4,
+    "name": "The Giant",
+    "destination": "Jupiter orbit",
+    "objective": "Put a robotic probe into orbit around Jupiter to measure its magnetic field and look deep into its atmosphere.",
+    "hazards": [
+      "Sunlight at Jupiter is only 3.7% as strong as at Earth.",
+      "Jupiter's radiation belts destroy unprotected electronics within days.",
+      "Radio signals take 33 to 54 minutes each way.",
+      "The trip takes about 2.7 years, or about 5 with an Earth flyby."
+    ],
+    "crewed": false,
+    "crewSize": 0,
+    "budget": 700,
+    "scienceTarget": 50,
+    "requiredInstruments": [
+      [
+        "magnetometer",
+        "plasma"
+      ],
+      [
+        "camera",
+        "imager",
+        "radiometer",
+        "spectrometer"
+      ]
+    ],
+    "returnEntrySpeed": null,
+    "critical": [
+      "power",
+      "comms",
+      "time"
+    ],
+    "orbit": {
+      "body": "jupiter",
+      "altitudeKm": 4200
+    },
+    "environment": {
+      "launchTarget": "TJI",
+      "launchCapacityFactor": 1,
+      "deltaV": 1000,
+      "cruiseDays": 1000,
+      "operationsDays": 600,
+      "returnDays": 0,
+      "sunDistanceAU": 5.2,
+      "earthDistanceAU": 6.2,
+      "eclipseHours": 0,
+      "eclipseFraction": 0,
+      "contactHoursPerDay": 8,
+      "cruiseElectronicsDose": 0.0005,
+      "operationsElectronicsDose": 30,
+      "crewDosePerDay": 0,
+      "scienceMultiplier": 1,
+      "operationsCostPerYear": 30
+    },
+    "trajectories": [
+      {
+        "id": "jupiter_direct",
+        "name": "Direct transfer",
+        "summary": "Launch straight towards Jupiter.",
+        "pros": [
+          "Arrive in about 2.7 years"
+        ],
+        "cons": [
+          "Needs a very energetic launch, so the rocket carries little"
+        ],
+        "overrides": {},
+        "tags": []
+      },
+      {
+        "id": "jupiter_ega",
+        "name": "Earth flyby boost",
+        "summary": "Loop around the Sun and swing past Earth to gain speed, like the Juno mission.",
+        "pros": [
+          "A gentler launch: the rocket can carry about twice as much"
+        ],
+        "cons": [
+          "Arrive about 2 years later",
+          "Needs an extra engine burn in deep space: +300 m/s"
+        ],
+        "overrides": {
+          "launchTarget": "EGA",
+          "cruiseDays": 1800,
+          "deltaV": 1300
+        },
+        "tags": [
+          "earth-assist"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "interstellar",
+    "chapter": 5,
+    "name": "Beyond: The Edge",
+    "destination": "The heliopause (~120 AU)",
+    "objective": "Send a probe past the heliopause, the edge of the Sun's bubble about 120 AU away, to sample the space between the stars.",
+    "hazards": [
+      "At 120 AU, sunlight is 14,400 times weaker than at Earth: solar panels are useless.",
+      "A radio signal takes about 16.6 hours each way.",
+      "The trip takes 17 to 33 years, so every part must last for decades."
+    ],
+    "crewed": false,
+    "crewSize": 0,
+    "budget": 700,
+    "scienceTarget": 20,
+    "requiredInstruments": [
+      [
+        "plasma",
+        "magnetometer"
+      ]
+    ],
+    "returnEntrySpeed": null,
+    "critical": [
+      "power",
+      "comms",
+      "time"
+    ],
+    "orbit": null,
+    "environment": {
+      "launchTarget": "ESCAPE",
+      "launchCapacityFactor": 0.6,
+      "deltaV": 300,
+      "cruiseDays": 12000,
+      "operationsDays": 730,
+      "returnDays": 0,
+      "sunDistanceAU": 120,
+      "earthDistanceAU": 120,
+      "eclipseHours": 0,
+      "eclipseFraction": 0,
+      "contactHoursPerDay": 8,
+      "cruiseElectronicsDose": 0.0001,
+      "operationsElectronicsDose": 0.0001,
+      "crewDosePerDay": 0,
+      "scienceMultiplier": 1,
+      "operationsCostPerYear": 5
+    },
+    "trajectories": [
+      {
+        "id": "interstellar_direct",
+        "name": "Direct escape",
+        "summary": "Leave the Solar System straight from launch at about 3.6 AU per year.",
+        "pros": [
+          "No risky flyby through Jupiter's radiation"
+        ],
+        "cons": [
+          "About 33 years to the heliopause",
+          "Needs a huge launch: the rocket carries 40% less"
+        ],
+        "overrides": {},
+        "tags": []
+      },
+      {
+        "id": "interstellar_jga",
+        "name": "Jupiter gravity assist",
+        "summary": "Steal speed from Jupiter to reach about 7 AU per year.",
+        "pros": [
+          "About twice as fast: 17 years instead of 33",
+          "A normal launch"
+        ],
+        "cons": [
+          "Passes through Jupiter's radiation belts",
+          "Needs an exact flyby: +100 m/s of corrections"
+        ],
+        "overrides": {
+          "cruiseDays": 6200,
+          "deltaV": 400,
+          "launchCapacityFactor": 1,
+          "cruiseElectronicsDose": 0.003
+        },
+        "tags": [
+          "jupiter-assist"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "exoplanet",
+    "chapter": 5,
+    "name": "Beyond: Other Worlds",
+    "destination": "Sun–Earth L2",
+    "objective": "Place a space telescope at Sun–Earth L2 and find Earth-sized planets around other stars by catching them passing in front of their stars.",
+    "hazards": [
+      "L2 is about 1.5 million km away, four times farther than the Moon.",
+      "An Earth-sized planet dims a Sun-like star by only 0.0084%: the telescope must hold extremely still.",
+      "Heat from the Sun blurs faint images, so a telescope works best when kept cold."
+    ],
+    "crewed": false,
+    "crewSize": 0,
+    "budget": 600,
+    "scienceTarget": 90,
+    "requiredInstruments": [
+      [
+        "photometer",
+        "telescope"
+      ]
+    ],
+    "returnEntrySpeed": null,
+    "critical": [
+      "power",
+      "budget",
+      "data"
+    ],
+    "orbit": null,
+    "environment": {
+      "launchTarget": "L2",
+      "launchCapacityFactor": 1,
+      "deltaV": 150,
+      "cruiseDays": 30,
+      "operationsDays": 1826,
+      "returnDays": 0,
+      "sunDistanceAU": 1.01,
+      "earthDistanceAU": 0.01,
+      "eclipseHours": 0,
+      "eclipseFraction": 0,
+      "contactHoursPerDay": 8,
+      "cruiseElectronicsDose": 0.0003,
+      "operationsElectronicsDose": 0.0003,
+      "crewDosePerDay": 0,
+      "scienceMultiplier": 1,
+      "operationsCostPerYear": 20
+    },
+    "trajectories": [
+      {
+        "id": "l2_direct",
+        "name": "Direct transfer",
+        "summary": "Head straight for L2.",
+        "pros": [
+          "Quick: about 30 days"
+        ],
+        "cons": [
+          "Uses the full launch energy"
+        ],
+        "overrides": {},
+        "tags": []
+      },
+      {
+        "id": "l2_lunar",
+        "name": "Lunar flyby transfer",
+        "summary": "Swing past the Moon on the way to save fuel.",
+        "pros": [
+          "Saves 70 m/s of Δv and lets the rocket carry 10% more"
+        ],
+        "cons": [
+          "Takes about 100 days to arrive"
+        ],
+        "overrides": {
+          "cruiseDays": 100,
+          "deltaV": 80,
+          "launchCapacityFactor": 1.1
+        },
+        "tags": [
+          "lunar-assist"
+        ]
+      }
+    ]
+  }
+]
