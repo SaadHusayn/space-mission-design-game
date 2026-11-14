@@ -68,3 +68,36 @@ public/models/{hangar,crew_avatar,engineer_npc,holo_table}.glb
 ## 8. Risks and tips
 - Keep cutscenes short. Players want to play. Use 3D vignettes rather than full character animation (no lip-sync).
 - The agency, logo and characters are **fictional** ([00](00-scope-and-story.md) §1).
+
+---
+
+## 9. Build notes (P03 as built)
+
+**Status: built and checked.** 171 unit tests, lint, typecheck and production build pass. A scripted headless-Chrome run plays the whole prologue (title → intro → nomination → crew setup → selection montage → all 7 training steps → graduation → Mission Control → reload → Continue) with no errors, at about 60 fps.
+
+| Acceptance criterion | Result |
+|---|---|
+| New game → intro and nomination cutscenes play and are skippable | ✅ Next (button / Enter / →) and Skip (button / hold Esc or Space) both work |
+| Solo and 2–4 player hot-seat setups; roles merged for < 4 | ✅ Role merging unit-tested for 1–4; 2-player setup checked in the browser. Duplicate call-signs are blocked |
+| Difficulty selectable and persisted | ✅ Saved with the profile in local storage |
+| Tutorial teaches camera, HUD and the TWR challenge with explanation | ✅ 7 steps: drag, zoom, click a part, swap a solar array (live resource deltas), trade-off, TWR physics question, graduation |
+| First-time tester finishes in ≤ 5 minutes | 🟡 Not measured: needs a human playtest |
+| Graduation → Chapter Select | ✅ Placeholder Mission Control screen until P04 |
+| Text ≥ 16 px; dialogue keyboard-advanceable | ✅ Cutscenes by keyboard; training buttons reachable by Tab + Enter |
+
+### Built
+
+- Logic (pure, tested): `game/core/crew.ts` (roles, merging, call-sign validation), `prologue.ts`, `patch.ts`; profile + prologue in `store.ts` (saved and sanitised on load); `game/data/story.ts` (fictional characters, difficulty texts).
+- Cutscene engine: `cutscenes/timeline.ts` (pure, tested), `scripts.ts` (CS-00 intro, CS-01 nomination, CS-02 selection montage), `CutsceneDirector.tsx` (camera moves, set switching), `CutsceneOverlay.tsx` (letterbox, subtitles with speaker, next/skip).
+- 3D sets (`sets/`): astronaut and engineer figures, Mission Design Center hangar with holo-table, night launch pad, Earth orbit, hologram transmission, centrifuge, simulator cockpit, neutral-buoyancy pool.
+- Screens: crew setup with difficulty, training HUD, physics console, resource panel (reused in P05), mission patch maker, graduation, Mission Control placeholder. The title menu shows Continue and Training after graduation.
+
+### Decisions and differences from the plan
+
+- **3D sets are built from simple shapes in code**, not baked Blender GLBs: no artist models exist yet. They can be swapped for GLBs later without touching the logic.
+- **Cutscenes can always be skipped**, not only after the first viewing (better for repeat players and testers).
+- Camera animation uses the project's own tested timeline maths instead of GSAP/Theatre.js (one less dependency).
+- **Hot-seat setup happens on one shared screen.** "Pass the device" hand-off screens come with team voting in P08.
+- The training resource demo uses the robotic telescope reference design (simpler to explain than a crewed capsule).
+- Engineers are stylised figures without faces; there's no voice-over (subtitles only).
+- Not done (plan "Could"): the selection aptitude quiz.

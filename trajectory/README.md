@@ -10,14 +10,15 @@ tests every design choice, and the mission report explains why the mission succe
 
 ## Status
 
-**Phases 01 and 02 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
+**Phases 01–03 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
 
 | Phase | State |
 |---|---|
 | P01 Foundation: project, 3D canvas, scene switching, loader, title screen, asset pipeline, CI | ✅ built |
 | P02 Core logic and physics engine: physics, data, design totals, Engineering Review, flight simulation, events, scoring, physics challenges (148 tests) | ✅ built |
-| P03 Recruitment, crew and training | next |
-| P04–P11 | planned |
+| P03 Recruitment, crew and training: cutscenes, crew setup (solo or up to 4), 7-step training, mission patch | ✅ built |
+| P04 Mission briefing and pathway map | next |
+| P05–P11 | planned |
 
 ## Run it
 

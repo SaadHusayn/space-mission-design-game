@@ -70,7 +70,7 @@ export default function GameRoot() {
     <div className="fixed inset-0 overflow-hidden bg-space text-ink">
       <CanvasErrorBoundary>
         <Canvas
-          shadows={quality === 'high'}
+          shadows={quality === 'high' ? 'percentage' : false}
           dpr={quality === 'high' ? [1, 2] : 1}
           camera={{ fov: 40, near: 0.1, far: 2500, position: [0, 0.45, 7.4] }}
           gl={{ antialias: true, powerPreference: 'high-performance' }}

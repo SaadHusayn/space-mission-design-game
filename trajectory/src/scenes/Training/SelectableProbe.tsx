@@ -54,7 +54,7 @@ export function SelectableProbe({ selected, onSelect, bigArray, position = [0, 0
       const active = selected !== null && (name === selected || groupOf(name) === groupOf(selected));
       const hover = hovered !== null && !active && (name === hovered || groupOf(name) === groupOf(hovered));
       node.material.emissive.copy(active ? HIGHLIGHT : hover ? HOVER : new Color(0, 0, 0));
-      node.material.emissiveIntensity = active ? 0.55 : hover ? 1 : 0;
+      node.material.emissiveIntensity = active ? 0.22 : hover ? 0.8 : 0;
       // The bigger array is 60% longer (and visibly heavier).
       if (name.startsWith('part_solar')) {
         const side = name.endsWith('left') ? -1 : 1;

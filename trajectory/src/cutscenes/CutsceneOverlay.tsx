@@ -59,7 +59,7 @@ export function CutsceneOverlay() {
   return (
     <div className="absolute inset-0 flex flex-col justify-between">
       <div className="h-[9vh] bg-black/85" />
-      <div className="flex flex-1 flex-col items-center justify-center px-6">
+      <div className="flex flex-1 flex-col items-center justify-start px-6 pt-6">
         {shot.caption && (
           <p key={`c${index}`} className="hud-enter max-w-3xl text-center text-xl font-semibold tracking-[0.14em] text-ink [text-shadow:0_2px_12px_#000] sm:text-2xl">
             {shot.caption}

@@ -36,5 +36,5 @@ npm run dev     # open http://localhost:3000 and press PLAY
 
 ## Current status
 
-Phases 01 (foundation) and 02 (game rules and physics engine, 148 tests) are done. Next: Phase 03 (recruitment, crew and training).
+Phases 01 (foundation), 02 (game rules and physics engine) and 03 (astronaut recruitment, crew setup and training) are done, with 171 tests. Next: Phase 04 (mission briefing and pathway map).
 See [HANDOFF.md](HANDOFF.md) for details.

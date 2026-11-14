@@ -1,7 +1,7 @@
 # HANDOFF: TRAJECTORY: Pathways Beyond
 
 > **Read this first if you are a new agent or teammate picking up the project.**
-> Last updated: 2026-11-14 · Current phase: **P02 done → next: P03 (Recruitment, crew & training)**
+> Last updated: 2026-11-14 · Current phase: **P03 done → next: P04 (Mission briefing & pathways)**
 
 ---
 
@@ -35,12 +35,12 @@ hazards test the design. A report explains why the mission succeeded or failed.
 |---|---|---|
 | P01 Foundation | ✅ Done | Title scene (3D Earth), scene switch, loader, settings, asset pipeline, CI file. Build notes at the end of `implementation-plan/phase-01-foundation.md` |
 | P02 Core logic & physics | ✅ Done | 148 tests. Build notes at the end of `implementation-plan/phase-02-core-logic-and-physics-engine.md` |
-| P03 Recruitment, crew & training | 🟡 Code done, verification in progress | Cutscenes, crew setup, training, graduation. See §4 |
+| P03 Recruitment, crew & training | ✅ Done | Cutscenes, crew setup, 7-step training, graduation. Build notes at the end of `implementation-plan/phase-03-recruitment-crew-training.md` |
 | P04–P11 | ⏳ Not started | Specs in `implementation-plan/phase-*.md` |
 
 ## 4. Current phase progress (update as you go)
 
-**P03** (`implementation-plan/phase-03-recruitment-crew-training.md`): code written and passing lint/types/171 tests/build. Remaining: browser walkthrough + screenshots, build notes, mark done.
+**Next up: P04** (`implementation-plan/phase-04-mission-briefing-and-pathways.md`): replace `src/scenes/ChapterSelect/ChapterSelectPlaceholder.tsx` with the 3D pathway map, add the briefing cutscene (reuse `cutscenes/`), and the objective/requirements screen that stores the mission contract (`createMission` from `@/game`).
 
 P03 files: `src/game/core/{crew,prologue,patch}.ts` (+ tests), `src/game/data/story.ts`, `src/cutscenes/*` (timeline, scripts CS-00..02, director, overlay), `src/sets/*` (3D sets built from primitives), `src/scenes/{Prologue,Training,ChapterSelect}/*`, `src/ui/{CrewSetup,DialogueBox,PhysicsConsole,ResourcePanel,PatchMaker,MissionPatch,CrewBadge}.tsx`.
 
@@ -113,6 +113,10 @@ These were not specified by the team. Each one can be changed.
 | D19 | **Survival mode**: when power is short, instruments go off and the radio drops to 20% before the battery drains | Matches how real spacecraft protect themselves | `sim/journey.ts` `SURVIVAL_COMMS_CUT` |
 | D20 | Scoring weights from phase-09 (objectives 30, science 20, engineering 15, efficiency 15, physics 10, decisions 10); a component that doesn't apply is left out and the rest re-weighted | Plan | `sim/scoring.ts` |
 | D21 | Physics challenge mistakes are never game over: they cost a little Δv, science or crew health, and always explain the right reasoning | Challenge text: teach *why* | `challenges/generator.ts` |
+| D22 | P03 **3D sets are simple shapes built in code** (no Blender GLBs yet) | No artist models | `src/sets/` |
+| D23 | **Cutscenes are always skippable**; camera moves use the project's own timeline maths, not GSAP | Repeat players and testers; one less dependency | `src/cutscenes/` |
+| D24 | **Hot-seat crew setup on one shared screen**; pass-the-device screens come with voting in P08 | Simpler first version | `src/ui/CrewSetup.tsx` |
+| D25 | **Pushing to GitHub skipped for now** (team's choice). Commits are local only | No `gh` CLI or stored GitHub login | — |
 | D14 | Crew radiation limit in game = **1,000 mSv per mission** | Based on space-agency career limits of about 0.6–1 Sv; keeps Mars possible with shielding | `src/game/sim/review.ts` |
 
 ## 7. Open questions for the team

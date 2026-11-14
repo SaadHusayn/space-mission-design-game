@@ -104,15 +104,7 @@ export function SimulatorSet() {
           <meshStandardMaterial color={colour} emissive={new Color(colour).multiplyScalar(2.2)} />
         </mesh>
       ))}
-      {/* seat */}
-      <mesh position={[0, 0.6, 1]}>
-        <boxGeometry args={[0.8, 0.2, 0.8]} />
-        <meshStandardMaterial color="#3b2f2a" roughness={0.9} />
-      </mesh>
-      <mesh position={[0, 1.2, 1.35]} rotation={[-0.2, 0, 0]}>
-        <boxGeometry args={[0.8, 1.2, 0.18]} />
-        <meshStandardMaterial color="#3b2f2a" roughness={0.9} />
-      </mesh>
+      {/* No seat: the camera is the pilot's eyes. */}
     </group>
   );
 }
