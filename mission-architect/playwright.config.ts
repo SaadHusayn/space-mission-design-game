@@ -24,8 +24,16 @@ export default defineConfig({
     channel: 'chrome',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
-    // Real GPU locally for realistic frame rates; CI machines use software rendering.
-    launchOptions: CI ? {} : { args: ['--enable-gpu', '--ignore-gpu-blocklist', '--use-angle=gl'] },
+    // Real GPU locally for realistic frame rates (D3D11 on Windows, GL on Linux); CI machines use software rendering.
+    launchOptions: CI
+      ? {}
+      : {
+          args: [
+            '--enable-gpu',
+            '--ignore-gpu-blocklist',
+            ...(process.platform === 'linux' ? ['--use-angle=gl'] : []),
+          ],
+        },
   },
   webServer: {
     command: `npm run start -- -p ${PORT}`,

@@ -1,9 +1,11 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { expect, type Page } from '@playwright/test';
 
-const SCREENS = path.join(process.cwd(), 'test-results', 'screens');
+const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const SCREENS = path.join(APP_ROOT, 'test-results', 'screens');
 
 /** Saves a named screenshot for visual review (test-results/screens/<project>-<name>.png). */
 export async function snap(page: Page, name: string, project = 'desktop'): Promise<void> {

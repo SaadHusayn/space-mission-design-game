@@ -208,6 +208,36 @@ describe('spacecraft design state (P05)', () => {
     expect(removal.partName).toBe('Multispectral imager');
   });
 
+  it('gates ERB_REVIEW to TRAJECTORY until all mandatory review checks pass', () => {
+    const store = assemblyStore();
+    expect(store.getState().submitToErb()).toBe(true);
+    expect(store.getState().phase).toBe('ERB_REVIEW');
+    // An empty design fails ERB-0 and cannot proceed to TRAJECTORY.
+    expect(store.getState().proceedFromErb()).toBe(false);
+    expect(store.getState().phase).toBe('ERB_REVIEW');
+
+    // Return to assembly and build a winning LEO design.
+    expect(store.getState().goTo('ASSEMBLY')).toBe(true);
+    const s = store.getState();
+    s.editDesign({ kind: 'bus', partId: 'capsule_crew' });
+    s.editDesign({ kind: 'equip', slot: 'power', partId: 'solar_crew' });
+    s.editDesign({ kind: 'equip', slot: 'battery', partId: 'battery_medium' });
+    s.editDesign({ kind: 'equip', slot: 'computer', partId: 'computer_standard' });
+    s.editDesign({ kind: 'equip', slot: 'adcs', partId: 'adcs_wheels' });
+    s.editDesign({ kind: 'equip', slot: 'comms', partId: 'comms_sband' });
+    s.editDesign({ kind: 'equip', slot: 'propulsion', partId: 'prop_biprop' });
+    s.editDesign({ kind: 'equip', slot: 'thermal', partId: 'thermal_basic' });
+    s.editDesign({ kind: 'equip', slot: 'lifeSupport', partId: 'ls_stored' });
+    s.editDesign({ kind: 'equip', slot: 'heatShield', partId: 'shield_leo' });
+    s.editDesign({ kind: 'addInstrument', partId: 'inst_imager' });
+    s.editDesign({ kind: 'option', key: 'fuelMass', value: 520 });
+    s.editDesign({ kind: 'option', key: 'supplyDays', value: 6 });
+
+    expect(store.getState().submitToErb()).toBe(true);
+    expect(store.getState().proceedFromErb()).toBe(true);
+    expect(store.getState().phase).toBe('TRAJECTORY');
+  });
+
   it('choosing a new pathway clears the design and its history', () => {
     const store = assemblyStore();
     store.getState().editDesign({ kind: 'bus', partId: 'capsule_crew' });
