@@ -29,4 +29,35 @@ export type { Challenge, ChallengeOption, ChallengeResult, ChallengeTopic, Chall
 export { applyChange, emptyHistory, redoChange, undoChange, HISTORY_LIMIT, type DesignChange, type DesignHistory } from './core/designActions';
 export { SLOT_ACTOR } from './core/store';
 export { incompatibilityReason, slotApplicable } from './sim/compat';
+export {
+  ASCENT_DURATION_S,
+  ASCENT_TIME_SCALE,
+  CLEAN_IGNITION_BONUS_DV,
+  CLEAN_IGNITION_WINDOW_S,
+  COUNTDOWN_START_S,
+  KARMAN_LINE_M,
+  MAX_Q_UNTHROTTLED_PENALTY_DV,
+  SCALE_HEIGHT_M,
+  SEA_LEVEL_DENSITY,
+  STAGE_LABELS,
+  VEHICLE_HEIGHT_M,
+  atmosphericDensity,
+  completeInsertion,
+  createAscent,
+  dynamicPressure,
+  engageMaxQThrottle,
+  insertionChallengeFor,
+  skipToInsertion,
+  stageForTime,
+  stepAscent,
+  targetOrbitalSpeed,
+  targetParkingAltitude,
+  toLaunchResult,
+  triggerIgnition,
+  vehicleHeightM,
+  type AscentStage,
+  type AscentState,
+  type IgnitionStatus,
+  type LaunchResult,
+} from './sim/ascent';
 export * as physics from './physics';

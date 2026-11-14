@@ -9,6 +9,9 @@ import { CutsceneOverlay } from '@/cutscenes/CutsceneOverlay';
 import { BriefingCutscene, ObjectiveScene } from '@/scenes/Briefing/BriefingScenes';
 import { ObjectivePanel } from '@/scenes/Briefing/ObjectivePanel';
 import { HangarScene } from '@/scenes/Hangar/HangarScene';
+import { LaunchScene, RolloutCutscene } from '@/scenes/Launch/LaunchScene';
+import { RocketLineupScene } from '@/scenes/LaunchPad/RocketLineupScene';
+import { TrajectoryScene } from '@/scenes/LaunchPad/TrajectoryScene';
 import { PathwayHud } from '@/scenes/PathwayMap/PathwayHud';
 import { PathwayMapScene } from '@/scenes/PathwayMap/PathwayMapScene';
 import { ModelPreviewScene } from '@/scenes/ModelPreview/ModelPreviewScene';
@@ -16,11 +19,15 @@ import { PrologueHud } from '@/scenes/Prologue/PrologueHud';
 import { PrologueScene } from '@/scenes/Prologue/PrologueScene';
 import { TitleScene } from '@/scenes/Title/TitleScene';
 import { AssemblyHud } from '@/ui/AssemblyHud';
+import { GoNoGoPanel } from '@/ui/GoNoGoPanel';
+import { LaunchHud } from '@/ui/LaunchHud';
 import { Loader } from '@/ui/Loader';
 import { PreviewHud } from '@/ui/PreviewHud';
 import { ReviewBoard } from '@/ui/ReviewBoard';
+import { RocketSelectHud } from '@/ui/RocketSelectHud';
 import { SettingsDialog } from '@/ui/SettingsDialog';
 import { TitleMenu } from '@/ui/TitleMenu';
+import { TrajectoryHud } from '@/ui/TrajectoryHud';
 import { WebGLFallback } from '@/ui/WebGLFallback';
 
 import { CanvasErrorBoundary } from './CanvasErrorBoundary';
@@ -51,6 +58,10 @@ function SceneSwitch() {
   if (phase === 'BRIEFING') return <BriefingCutscene />;
   if (phase === 'OBJECTIVE') return <ObjectiveScene />;
   if (phase === 'ASSEMBLY' || phase === 'ERB_REVIEW') return <HangarScene />;
+  if (phase === 'TRAJECTORY') return <TrajectoryScene />;
+  if (phase === 'LAUNCH_VEHICLE' || phase === 'GO_NO_GO') return <RocketLineupScene />;
+  if (phase === 'ROLLOUT') return <RolloutCutscene />;
+  if (phase === 'LAUNCH') return <LaunchScene />;
   // Later phases get their own scenes as they are built.
   return <ModelPreviewScene />;
 }
@@ -73,11 +84,29 @@ function HudLayer() {
       {phase === 'TITLE' && <TitleMenu />}
       {phase === 'PROLOGUE' && <PrologueHud />}
       {phase === 'CHAPTER_SELECT' && <PathwayHud />}
-      {phase === 'BRIEFING' && <CutsceneOverlay />}
+      {(phase === 'BRIEFING' || phase === 'ROLLOUT') && <CutsceneOverlay />}
       {phase === 'OBJECTIVE' && <ObjectivePanel />}
       {phase === 'ASSEMBLY' && <AssemblyHud />}
       {phase === 'ERB_REVIEW' && <ReviewBoard />}
-      {!['BOOT', 'TITLE', 'PROLOGUE', 'CHAPTER_SELECT', 'BRIEFING', 'OBJECTIVE', 'ASSEMBLY', 'ERB_REVIEW'].includes(phase) && <PreviewHud />}
+      {phase === 'TRAJECTORY' && <TrajectoryHud />}
+      {phase === 'LAUNCH_VEHICLE' && <RocketSelectHud />}
+      {phase === 'GO_NO_GO' && <GoNoGoPanel />}
+      {phase === 'LAUNCH' && <LaunchHud />}
+      {![
+        'BOOT',
+        'TITLE',
+        'PROLOGUE',
+        'CHAPTER_SELECT',
+        'BRIEFING',
+        'OBJECTIVE',
+        'ASSEMBLY',
+        'ERB_REVIEW',
+        'TRAJECTORY',
+        'LAUNCH_VEHICLE',
+        'GO_NO_GO',
+        'ROLLOUT',
+        'LAUNCH',
+      ].includes(phase) && <PreviewHud />}
       <SettingsDialog />
     </div>
   );

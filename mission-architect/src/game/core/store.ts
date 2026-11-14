@@ -7,15 +7,17 @@
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
+import type { ChallengeResult } from '../challenges/types';
 import type { DecisionDelta, DecisionLogEntry, Design, Difficulty, PathwayId, SlotId } from '../types';
 import { emptyDesign } from '../types';
-import { gameData } from '../data/loadData';
+import { gameData, getLaunchVehicle, getPathway } from '../data/loadData';
 import { AVATAR_COLOURS, MAX_CREW, ROLE_IDS, createCrew, type CrewMember } from './crew';
 import { applyChange, redoChange, undoChange, type DesignChange } from './designActions';
 import { canTransition, type Phase } from './machine';
 import { DEFAULT_PATCH, sanitisePatch, type MissionPatch } from './patch';
 import { isUnlocked, recordResult, sanitiseProgress, type Progress } from './progress';
 import { isPrologueStep, nextPrologueStep, type PrologueStep } from './prologue';
+import type { LaunchResult } from '../sim/ascent';
 import { summarizeDesign } from '../sim/design';
 import { createMission } from '../sim/mission';
 import { reviewDesign } from '../sim/review';
@@ -85,6 +87,12 @@ export interface GameState {
   designFuture: Design[];
   /** Every design choice made during assembly, for the mission report. */
   decisionLog: DecisionLogEntry[];
+  /** Selected launch vehicle ID (Phase 06), or null before selection. */
+  vehicleId: string | null;
+  /** Result of the launch ascent and orbit insertion (Phase 06). */
+  launchResult: LaunchResult | null;
+  /** Completed physics challenge results across the mission. */
+  challengeResults: ChallengeResult[];
 
   /** Moves to another phase. Returns false if the transition isn't allowed. */
   goTo: (phase: Phase) => boolean;
@@ -101,6 +109,22 @@ export interface GameState {
   submitToErb: () => boolean;
   /** Proceeds from ERB_REVIEW to TRAJECTORY only when the design passes every mandatory ERB check. */
   proceedFromErb: () => boolean;
+  /** Selects a trajectory option for the current pathway. */
+  selectTrajectory: (trajectoryId: string) => boolean;
+  /** Proceeds from TRAJECTORY to LAUNCH_VEHICLE. */
+  proceedToLaunchVehicle: () => boolean;
+  /** Selects a launch vehicle from the catalogue. */
+  selectLaunchVehicle: (vehicleId: string) => boolean;
+  /** Proceeds from LAUNCH_VEHICLE to GO_NO_GO when a rocket is selected. */
+  proceedToGoNoGo: () => boolean;
+  /** Proceeds from GO_NO_GO to ROLLOUT only when all ERB + rocket checks are GO (review.go === true). */
+  confirmGoForLaunch: () => boolean;
+  /** Proceeds from ROLLOUT cutscene to interactive LAUNCH. */
+  startLaunch: () => boolean;
+  /** Records a completed physics challenge result. */
+  recordChallengeResult: (result: ChallengeResult) => void;
+  /** Completes the LAUNCH phase and transitions to JOURNEY. */
+  completeLaunch: (result: LaunchResult) => boolean;
 
   setCrew: (crew: CrewMember[]) => void;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -270,6 +294,9 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     designPast: [],
     designFuture: [],
     decisionLog: [],
+    vehicleId: null,
+    launchResult: null,
+    challengeResults: [],
 
     goTo: (phase) => {
       if (!canTransition(get().phase, phase)) return false;
@@ -317,7 +344,119 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
       if (state.phase !== 'ERB_REVIEW' || !state.design || !state.mission) return false;
       const review = reviewDesign(state.design, missionContextOf(state));
       if (!review.passable) return false;
+      if (!state.mission.trajectoryId) {
+        const defaultTrajectory = getPathway(state.mission.pathwayId).trajectories[0]?.id ?? null;
+        set({ mission: { ...state.mission, trajectoryId: defaultTrajectory } });
+      }
       return state.goTo('TRAJECTORY');
+    },
+    selectTrajectory: (trajectoryId) => {
+      const state = get();
+      if (!state.mission) return false;
+      const pathway = getPathway(state.mission.pathwayId);
+      const chosen = pathway.trajectories.find((item) => item.id === trajectoryId);
+      if (!chosen) return false;
+      const currentId = state.mission.trajectoryId ?? pathway.trajectories[0]?.id ?? null;
+      if (currentId === trajectoryId && state.mission.trajectoryId === trajectoryId) return true;
+
+      let decisionLog = state.decisionLog;
+      if (state.design && currentId !== trajectoryId) {
+        const vehicle = state.vehicleId ? getLaunchVehicle(state.vehicleId) : null;
+        const beforeCtx = createMission(pathway, currentId ?? undefined, state.profile.difficulty);
+        const afterCtx = createMission(pathway, trajectoryId, state.profile.difficulty);
+        const before = summarizeDesign(state.design, beforeCtx, vehicle);
+        const after = summarizeDesign(state.design, afterCtx, vehicle);
+        const deltas: Partial<Record<DecisionDelta, number>> = {};
+        const dvReqDiff = afterCtx.env.deltaV - beforeCtx.env.deltaV;
+        if (Math.abs(dvReqDiff) > 1e-9) deltas.deltaV = -dvReqDiff;
+        const powerDiff = after.powerAvailable - before.powerAvailable;
+        if (Math.abs(powerDiff) > 1e-9) deltas.power = Math.round(powerDiff);
+        decisionLog = [
+          ...decisionLog,
+          {
+            id: decisionLog.length + 1,
+            actor: 'commander',
+            kind: 'trajectory',
+            slotId: null,
+            partId: chosen.id,
+            partName: chosen.name,
+            deltas,
+          },
+        ];
+      }
+
+      set({
+        mission: { ...state.mission, trajectoryId },
+        decisionLog,
+      });
+      return true;
+    },
+    proceedToLaunchVehicle: () => {
+      const state = get();
+      if (state.phase !== 'TRAJECTORY' || !state.mission || !state.design) return false;
+      if (!state.mission.trajectoryId) {
+        const defaultTrajectory = getPathway(state.mission.pathwayId).trajectories[0]?.id ?? null;
+        set({ mission: { ...state.mission, trajectoryId: defaultTrajectory } });
+      }
+      return state.goTo('LAUNCH_VEHICLE');
+    },
+    selectLaunchVehicle: (vehicleId) => {
+      const state = get();
+      if (!state.mission || !gameData.launchVehicleById.has(vehicleId)) return false;
+      if (state.vehicleId === vehicleId) return true;
+      const nextVehicle = getLaunchVehicle(vehicleId);
+      const prevVehicle = state.vehicleId ? getLaunchVehicle(state.vehicleId) : null;
+      let decisionLog = state.decisionLog;
+      if (state.design) {
+        const costDiff = nextVehicle.cost - (prevVehicle?.cost ?? 0);
+        decisionLog = [
+          ...decisionLog,
+          {
+            id: decisionLog.length + 1,
+            actor: 'engineer',
+            kind: 'vehicle',
+            slotId: null,
+            partId: nextVehicle.id,
+            partName: nextVehicle.name,
+            deltas: costDiff !== 0 ? { cost: costDiff } : {},
+          },
+        ];
+      }
+      set({ vehicleId, decisionLog });
+      return true;
+    },
+    proceedToGoNoGo: () => {
+      const state = get();
+      if (state.phase !== 'LAUNCH_VEHICLE' || !state.mission || !state.design || !state.vehicleId) return false;
+      return state.goTo('GO_NO_GO');
+    },
+    confirmGoForLaunch: () => {
+      const state = get();
+      if (state.phase !== 'GO_NO_GO' || !state.mission || !state.design || !state.vehicleId) return false;
+      const vehicle = getLaunchVehicle(state.vehicleId);
+      const review = reviewDesign(state.design, missionContextOf(state), vehicle);
+      if (!review.go) return false;
+      return state.goTo('ROLLOUT');
+    },
+    startLaunch: () => {
+      const state = get();
+      if (state.phase !== 'ROLLOUT' || !state.mission || !state.design || !state.vehicleId) return false;
+      return state.goTo('LAUNCH');
+    },
+    recordChallengeResult: (result) => {
+      set((state) => ({
+        challengeResults: [...state.challengeResults, result],
+      }));
+    },
+    completeLaunch: (result) => {
+      const state = get();
+      if (state.phase !== 'LAUNCH') return false;
+      const challengeResults =
+        result.insertionResult && !state.challengeResults.includes(result.insertionResult)
+          ? [...state.challengeResults, result.insertionResult]
+          : state.challengeResults;
+      set({ launchResult: result, challengeResults });
+      return state.goTo('JOURNEY');
     },
 
     setCrew: (crew) => set((state) => ({ profile: { ...state.profile, crew: crew.map((member) => ({ ...member, roles: [...member.roles] })) } })),
@@ -349,14 +488,32 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     selectPathway: (pathwayId, unlockAll = false) => {
       const state = get();
       if (!isUnlocked(pathwayId, state.profile.progress, unlockAll) || !canTransition(state.phase, 'BRIEFING')) return false;
-      set({ mission: { pathwayId, trajectoryId: null }, design: null, designPast: [], designFuture: [], decisionLog: [], phase: 'BRIEFING' });
+      set({
+        mission: { pathwayId, trajectoryId: null },
+        design: null,
+        designPast: [],
+        designFuture: [],
+        decisionLog: [],
+        vehicleId: null,
+        launchResult: null,
+        challengeResults: [],
+        phase: 'BRIEFING',
+      });
       return true;
     },
     openObjective: () => (get().mission ? get().goTo('OBJECTIVE') : false),
     acceptMission: () => {
       const state = get();
       if (!state.mission) return false;
-      set({ design: emptyDesign(), designPast: [], designFuture: [], decisionLog: [] });
+      set({
+        design: emptyDesign(),
+        designPast: [],
+        designFuture: [],
+        decisionLog: [],
+        vehicleId: null,
+        launchResult: null,
+        challengeResults: [],
+      });
       return state.goTo('ASSEMBLY');
     },
     backToMap: () => get().goTo('CHAPTER_SELECT'),

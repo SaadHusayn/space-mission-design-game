@@ -135,26 +135,27 @@ const orbitSpeed: Generator = ({ mission }) => {
   const orbit = mission.pathway.orbit;
   const bodyId = ORBIT_BODY[mission.pathway.id];
   if (!orbit || !bodyId) return null;
+  const altitudeKm = mission.trajectory.id === 'leo_550' ? 550 : orbit.altitudeKm;
   const body = BODIES[bodyId];
-  const r = body.radius + orbit.altitudeKm * 1000;
+  const r = body.radius + altitudeKm * 1000;
   const v = circularOrbitSpeed(body.gm, r);
   const k = (value: number) => `${fmt(value / 1000, 2)} km/s`;
   return singleCorrect({
     id: 'C-ORBIT',
     topic: 'orbitSpeed',
     title: 'How fast to stay in orbit?',
-    prompt: `To orbit ${orbit.altitudeKm.toLocaleString('en-US')} km above ${body.name}, how fast must the spacecraft fly sideways?`,
+    prompt: `To orbit ${altitudeKm.toLocaleString('en-US')} km above ${body.name}, how fast must the spacecraft fly sideways?`,
     givens: [
       { label: `GM of ${body.name}`, value: `${body.gm.toExponential(3)} m³/s²` },
       { label: `${body.name}'s radius`, value: `${fmt(body.radius / 1000)} km` },
-      { label: 'Altitude', value: `${fmt(orbit.altitudeKm)} km` },
+      { label: 'Altitude', value: `${fmt(altitudeKm)} km` },
     ],
     formula: 'v = √(GM ÷ r), with r = radius + altitude',
-    workedHint: `r = ${fmt(body.radius / 1000)} + ${fmt(orbit.altitudeKm)} = ${fmt(r / 1000)} km = ${r.toExponential(3)} m.`,
+    workedHint: `r = ${fmt(body.radius / 1000)} + ${fmt(altitudeKm)} = ${fmt(r / 1000)} km = ${r.toExponential(3)} m.`,
     options: [
       { id: 'right', label: k(v), correct: true },
       { id: 'escape', label: k(escapeVelocity(body.gm, r)), misconception: 'That is escape speed (√2 times faster): fast enough to leave for good, not to circle.' },
-      { id: 'altitude_only', label: k(circularOrbitSpeed(body.gm, orbit.altitudeKm * 1000)), misconception: "That measures r from the surface. r is the distance from the planet's centre." },
+      { id: 'altitude_only', label: k(circularOrbitSpeed(body.gm, altitudeKm * 1000)), misconception: "That measures r from the surface. r is the distance from the planet's centre." },
       { id: 'surface', label: k(circularOrbitSpeed(body.gm, body.radius)), misconception: 'That is the speed for an orbit skimming the surface, ignoring the altitude.' },
     ],
     right: `v = √(${body.gm.toExponential(3)} ÷ ${r.toExponential(3)}) = ${k(v)}. Slower and gravity pulls you down; faster and the orbit stretches out.`,
@@ -167,8 +168,9 @@ const centripetal: Generator = ({ mission, summary }) => {
   const orbit = mission.pathway.orbit;
   const bodyId = ORBIT_BODY[mission.pathway.id];
   if (!orbit || !bodyId || summary.dryMass <= 0) return null;
+  const altitudeKm = mission.trajectory.id === 'leo_550' ? 550 : orbit.altitudeKm;
   const body = BODIES[bodyId];
-  const r = body.radius + orbit.altitudeKm * 1000;
+  const r = body.radius + altitudeKm * 1000;
   const v = circularOrbitSpeed(body.gm, r);
   const mass = summary.dryMass;
   const force = centripetalForce(mass, v, r);
@@ -178,7 +180,7 @@ const centripetal: Generator = ({ mission, summary }) => {
     id: 'C-CENTRIPETAL',
     topic: 'centripetal',
     title: 'What keeps you in orbit?',
-    prompt: `Your ${fmt(mass)} kg spacecraft circles ${body.name} at ${fmt(v / 1000, 2)} km/s, ${fmt(orbit.altitudeKm)} km up. How big is the force that keeps it on its curved path?`,
+    prompt: `Your ${fmt(mass)} kg spacecraft circles ${body.name} at ${fmt(v / 1000, 2)} km/s, ${fmt(altitudeKm)} km up. How big is the force that keeps it on its curved path?`,
     givens: [
       { label: 'Mass', value: `${fmt(mass)} kg` },
       { label: 'Speed', value: `${fmt(v)} m/s` },
