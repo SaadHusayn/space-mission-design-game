@@ -1,10 +1,11 @@
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { expect, type Page } from '@playwright/test';
 
-const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const APP_ROOT = process.cwd().endsWith('mission-architect')
+  ? process.cwd()
+  : path.join(process.cwd(), 'mission-architect');
 const SCREENS = path.join(APP_ROOT, 'test-results', 'screens');
 
 /** Saves a named screenshot for visual review (test-results/screens/<project>-<name>.png). */

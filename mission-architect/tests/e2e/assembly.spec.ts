@@ -103,7 +103,7 @@ test('spacecraft assembly & ERB: build LEO crewed design, test calculator/undo, 
   await snap(page, 'p05-05-erb-go');
 
   await proceedBtn.click();
-  await expect(page.getByRole('heading', { name: 'Trajectory & Launch Vehicle' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Flight Path & Transfer Selection/ })).toBeVisible();
   expect(errors).toEqual([]);
 });
 

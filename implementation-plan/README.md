@@ -1,6 +1,6 @@
 # Implementation Plan: TRAJECTORY: Pathways Beyond (3D, Three.js)
 
-> **Code:** [`../mission-architect/`](../mission-architect/README.md) · **Status:** P01–P05 built (build notes at the end of each phase file). Next: P06. See [`../HANDOFF.md`](../HANDOFF.md).
+> **Code:** [`../mission-architect/`](../mission-architect/README.md) · **Status:** P01–P06 built (build notes at the end of each phase file). Next: P07. See [`../HANDOFF.md`](../HANDOFF.md).
 
 > **Story:** *Astronaut candidates are nominated and recruited by a space agency. They design their spacecraft side by side with engineers, then fly it on different mission pathways: Earth orbit, the Moon, Mars, Jupiter, and to the edge of the Solar System and the worlds beyond it. Real physics hazards test every design choice. The crew is evaluated on how well their physics-based engineering holds up.*
 >

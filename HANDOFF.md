@@ -1,7 +1,7 @@
 # HANDOFF: TRAJECTORY: Pathways Beyond
 
 > **Read this first if you are a new agent or teammate picking up the project.**
-> Last updated: 2026-11-15 · Current phase: **P05 done → next: P06 (Launch vehicle, launch & orbit)**
+> Last updated: 2026-11-15 · Current phase: **P06 done → next: P07 (Journeys & physics scenarios)**
 
 ---
 
@@ -38,11 +38,14 @@ hazards test the design. A report explains why the mission succeeded or failed.
 | P03 Recruitment, crew & training | ✅ Done | Cutscenes, crew setup, 7-step training, graduation. Build notes at the end of `implementation-plan/phase-03-recruitment-crew-training.md` |
 | P04 Mission briefing & pathways | ✅ Done | 3D pathway map, per-pathway briefing, mission contract screen. Build notes at the end of `implementation-plan/phase-04-mission-briefing-and-pathways.md` |
 | P05 Spacecraft assembly & Engineering Review | ✅ Done | 3D hangar assembly bay, procedural `part_*` meshes on `socket_*` empties, live Resource HUD, Trade-Off popup, Physics Calculator, ERB screen with slot-fix jump & gating. Build notes at the end of `implementation-plan/phase-05-spacecraft-assembly-and-review.md` |
-| P06–P11 | ⏳ Not started | Specs in `implementation-plan/phase-*.md` |
+| P06 Launch vehicle, launch & orbit | ✅ Done | 3D trajectory design room, 4-rocket pad lineup, GO/NO-GO review poll (resolving D11 rocket checks), CS-04 rollout cutscene, interactive 3D launch ascent (`ascent.ts`: ignition timing, Max-Q throttle-down, stage & fairing separation), and orbit insertion physics challenge. Build notes at the end of `implementation-plan/phase-06-launch-and-orbit.md` |
+| P07–P11 | ⏳ Not started | Specs in `implementation-plan/phase-*.md` |
 
 ## 4. Current phase progress (update as you go)
 
-**Next up: P06** (`implementation-plan/phase-06-launch-and-orbit.md`): replace the `TRAJECTORY` stand-in (`ModelPreviewScene` + `ui/PreviewHud.tsx`) with trajectory comparison cards (using `mission.pathway.trajectories`), launch vehicle selection (`gameData.launchVehicles`), the full GO/NO-GO review (`reviewDesign(design, mission, vehicle)`), and the 3D launch + orbit insertion sequence.
+**Next up: P07** (`implementation-plan/phase-07-journeys-and-physics-scenarios.md`): replace the `JOURNEY` stand-in (`ModelPreviewScene` + `ui/PreviewHud.tsx`) with the 3D Solar System cruise and destination operations scene driven by `startJourney` and `advanceJourney` (`src/game/sim/journey.ts`), testing the spacecraft design against pathway hazards and presenting mid-flight physics challenges.
+
+P06 files: `src/game/sim/ascent.ts` (+ tests), `src/cutscenes/rollout.ts`, `src/three/RocketModel.tsx`, `src/scenes/LaunchPad/{TrajectoryScene,RocketLineupScene}.tsx`, `src/scenes/Launch/{launchStore,LaunchScene}.ts(x)`, `src/ui/{TrajectoryHud,RocketSelectHud,GoNoGoPanel,LaunchHud}.tsx`, `tests/e2e/launch.spec.ts`.
 
 P05 files: `src/game/core/designActions.ts` (+ tests), `src/game/sim/compat.ts` (+ tests), `src/scenes/Hangar/{HangarScene,assemblyStore,assembly.test}.ts(x)`, `src/three/Spacecraft.tsx`, `src/ui/{AssemblyHud,SlotList,PartBrowser,PartCard,TradeOffPopup,EngineerBark,DesignCalculator,ReviewBoard}.tsx`, `tests/e2e/assembly.spec.ts`.
 
@@ -130,6 +133,7 @@ These were not specified by the team. Each one can be changed.
 | D14 | Crew radiation limit in game = **1,000 mSv per mission** | Based on space-agency career limits of about 0.6–1 Sv; keeps Mars possible with shielding | `src/game/sim/review.ts` |
 | D30 | **Procedural 3D spacecraft assembly (`Spacecraft.tsx`)** builds each bus, power source, battery, computer, ADCS, antenna, propulsion stage, radiation shield, thermal system, life support, habitat, heat shield and instrument from Three.js primitives attached to `socket_*` empties, with an **Exploded View** toggle that offsets parts outward along their socket vectors | Matches D22 (code-generated 3D shapes) and keeps `part_*` / `socket_*` conventions ready for future GLB drop-ins | `src/three/Spacecraft.tsx` |
 | D31 | **Windows Playwright WebGL2 compatibility**: `--use-angle=gl` is only passed on Linux; Windows uses its native Direct3D 11 ANGLE backend so headless/automated Chrome always initializes WebGL 2 | `--use-angle=gl` disabled WebGL 2 context creation on Windows Chrome | `mission-architect/playwright.config.ts` |
+| D32 | **1D Launch Ascent Simulation (`src/game/sim/ascent.ts`)** models exponential atmospheric density $\rho(h) = \rho_0 e^{-h/H}$, dynamic pressure $q = \frac{1}{2}\rho(h)v^2$, gravity turn altitude/velocity profiles to target parking orbit, T-0 clean ignition bonus ($+25\text{ m/s}$ $\Delta v$), Max-Q throttle-down ($72\%$ throttle vs. $-35\text{ m/s}$ structural attitude-control penalty on tight-margin buses), and Orbit Insertion physics challenge (`orbitSpeed`/`centripetal`/`rocketEquation`) | Keeps launch physics deterministic, pure TypeScript, and fast (~14s at 1× or instant via Skip/4×) while tying every interactive beat to real mission $\Delta v$ margins | `src/game/sim/ascent.ts`, `src/scenes/Launch/LaunchScene.tsx`, `src/ui/LaunchHud.tsx` |
 
 ## 7. Open questions for the team
 

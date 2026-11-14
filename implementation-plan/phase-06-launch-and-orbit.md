@@ -52,14 +52,26 @@ public/models/{launch_pad,rocket_*}.glb
 ```
 
 ## 6. Acceptance criteria
-- [ ] ≥ 2 trajectory/orbit options per chapter with visible effects on the totals (M6).
-- [ ] ≥ 3 rockets. Mass/target compatibility and budget are checked with reasons (M5/M9).
-- [ ] An overweight design gets **NO-GO with the reason and a fix**. A good design gets GO.
-- [ ] The launch is fully 3D with stage separation and a camera follow (T1). It's skippable after the first view.
-- [ ] The interactive beats work and affect the results (Δv margin, structure warning).
-- [ ] The orbit-insertion challenge shows the explanation for every option, and the consequence is applied (02 §C).
-- [ ] The launch scene runs ≥ 50–60 fps (particles scale with the quality setting).
+- [x] ≥ 2 trajectory/orbit options per chapter with visible effects on the totals (M6).
+- [x] ≥ 3 rockets. Mass/target compatibility and budget are checked with reasons (M5/M9).
+- [x] An overweight design gets **NO-GO with the reason and a fix**. A good design gets GO.
+- [x] The launch is fully 3D with stage separation and a camera follow (T1). It's skippable after the first view.
+- [x] The interactive beats work and affect the results (Δv margin, structure warning).
+- [x] The orbit-insertion challenge shows the explanation for every option, and the consequence is applied (02 §C).
+- [x] The launch scene runs ≥ 50–60 fps (particles scale with the quality setting).
 
 ## 7. Risks and tips
 - The exhaust and smoke can kill performance. Cap the particle counts and use instancing.
 - Keep the ascent model simple. It's for feel and lessons, not trajectory accuracy.
+
+---
+
+## 8. Build notes (2026-11-15)
+
+- **1D Ascent Physics (`src/game/sim/ascent.ts` + `ascent.test.ts`):** Pure TypeScript 1D launch ascent model using SI units (`atmosphericDensity`, `dynamicPressure`, `targetParkingAltitude`, `targetOrbitalSpeed`, `createAscent`, `triggerIgnition`, `engageMaxQThrottle`, `stepAscent`, `skipToInsertion`, `completeInsertion`, `toLaunchResult`, `insertionChallengeFor`).
+- **Store Integration (`src/game/core/store.ts` + `store.test.ts`):** Added `vehicleId`, `launchResult`, and `challengeResults` state plus `selectTrajectory`, `proceedToLaunchVehicle`, `selectLaunchVehicle`, `proceedToGoNoGo`, `confirmGoForLaunch` (gated on `reviewDesign(design, mission, vehicle).go`), `startLaunch`, `recordChallengeResult`, and `completeLaunch`.
+- **Trajectory Design Room (`src/scenes/LaunchPad/TrajectoryScene.tsx` + `src/ui/TrajectoryHud.tsx`):** 3D holographic orbital transfer visualization inside the shared `<Canvas>` paired with interactive trajectory comparison cards (required $\Delta v$, travel time, Hohmann 259-day analytical note for Mars, Earth-flyby capacity note for Jupiter, radiation, pros/cons, and real-time ERB feasibility check).
+- **Launch Vehicle Lineup & Selection (`src/three/RocketModel.tsx`, `src/scenes/LaunchPad/RocketLineupScene.tsx`, `src/ui/RocketSelectHud.tsx`):** 3D pad lineup of all 4 rockets (`lv_light`, `lv_medium`, `lv_heavy`, `lv_superheavy`) standing at relative heights (`24 m`, `48 m`, `64 m`, `92 m`) with separable Stage 1, Stage 2, and split payload fairing halves enclosing the player's 3D `Spacecraft`, plus compatibility cards (`ERB-1L` payload capacity, `ERB-3` liftoff TWR, `ERB-9` max G-load, `ERB-13` budget) and an optional Liftoff TWR `PhysicsConsole`.
+- **GO / NO-GO Review (`src/ui/GoNoGoPanel.tsx`):** Resolves all rocket-dependent ERB checks (`ERB-1L`, `ERB-3`, `ERB-9`, `ERB-13`) per D11, displays the 5-station Mission Control poll, lists blocking NO-GO failures and actionable fixes, and gates progression to `ROLLOUT` on `review.go === true`.
+- **Rollout & Interactive 3D Launch (`src/cutscenes/rollout.ts`, `src/scenes/Launch/launchStore.ts`, `src/scenes/Launch/LaunchScene.tsx`, `src/ui/LaunchHud.tsx`):** Plays the `CS-04` rollout cutscene (`ROLLOUT` → `LAUNCH`), followed by the interactive 3D launch sequence (T-0 ignition timing bonus, Max-Q dynamic pressure throttle-down, Stage 1 separation, Fairing separation above 80 km, curved Earth horizon limb, and the Orbit Insertion `PhysicsConsole` challenge) transitioning into `JOURNEY`.
+- **Verification:** 222 unit tests passing (`npm test`) and 11 Playwright E2E browser tests passing (`tests/e2e/launch.spec.ts`), with step screenshots captured in `mission-architect/test-results/screens/desktop-p06-*.png`.
