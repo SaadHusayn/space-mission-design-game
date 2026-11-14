@@ -264,3 +264,113 @@ describe('spacecraft design state (P05)', () => {
     expect(Object.keys(saved.state).sort()).toEqual(['profile', 'settings']);
   });
 });
+
+describe('trajectory, launch vehicle, GO/NO-GO & launch state (P06)', () => {
+  function trajectoryReadyStore() {
+    const store = createGameStore();
+    const s = store.getState();
+    s.goTo('TITLE');
+    s.goTo('CHAPTER_SELECT');
+    s.selectPathway('leo');
+    s.openObjective();
+    s.acceptMission();
+    s.editDesign({ kind: 'bus', partId: 'capsule_crew' });
+    s.editDesign({ kind: 'equip', slot: 'power', partId: 'solar_crew' });
+    s.editDesign({ kind: 'equip', slot: 'battery', partId: 'battery_medium' });
+    s.editDesign({ kind: 'equip', slot: 'computer', partId: 'computer_standard' });
+    s.editDesign({ kind: 'equip', slot: 'adcs', partId: 'adcs_wheels' });
+    s.editDesign({ kind: 'equip', slot: 'comms', partId: 'comms_sband' });
+    s.editDesign({ kind: 'equip', slot: 'propulsion', partId: 'prop_biprop' });
+    s.editDesign({ kind: 'equip', slot: 'thermal', partId: 'thermal_basic' });
+    s.editDesign({ kind: 'equip', slot: 'lifeSupport', partId: 'ls_stored' });
+    s.editDesign({ kind: 'equip', slot: 'heatShield', partId: 'shield_leo' });
+    s.editDesign({ kind: 'addInstrument', partId: 'inst_imager' });
+    s.editDesign({ kind: 'option', key: 'fuelMass', value: 520 });
+    s.editDesign({ kind: 'option', key: 'supplyDays', value: 6 });
+    expect(s.submitToErb()).toBe(true);
+    expect(store.getState().proceedFromErb()).toBe(true);
+    expect(store.getState().phase).toBe('TRAJECTORY');
+    return store;
+  }
+
+  it('selects a trajectory option, logs the decision, and proceeds to LAUNCH_VEHICLE', () => {
+    const store = trajectoryReadyStore();
+    expect(store.getState().mission?.trajectoryId).toBe('leo_400');
+    expect(store.getState().selectTrajectory('invalid_traj')).toBe(false);
+
+    const logLenBefore = store.getState().decisionLog.length;
+    expect(store.getState().selectTrajectory('leo_550')).toBe(true);
+    expect(store.getState().mission?.trajectoryId).toBe('leo_550');
+    expect(store.getState().decisionLog.length).toBe(logLenBefore + 1);
+    const lastEntry = store.getState().decisionLog[store.getState().decisionLog.length - 1];
+    expect(lastEntry.kind).toBe('trajectory');
+    expect(lastEntry.partId).toBe('leo_550');
+
+    expect(store.getState().proceedToLaunchVehicle()).toBe(true);
+    expect(store.getState().phase).toBe('LAUNCH_VEHICLE');
+  });
+
+  it('gates GO_NO_GO to ROLLOUT on rocket-dependent ERB checks (D11)', () => {
+    const store = trajectoryReadyStore();
+    store.getState().proceedToLaunchVehicle();
+
+    // Cannot proceed to GO_NO_GO before selecting a rocket
+    expect(store.getState().proceedToGoNoGo()).toBe(false);
+    expect(store.getState().selectLaunchVehicle('unknown_rocket')).toBe(false);
+
+    // Select lv_light (1,500 kg to LEO — too small for a ~5,000 kg crewed capsule)
+    expect(store.getState().selectLaunchVehicle('lv_light')).toBe(true);
+    expect(store.getState().vehicleId).toBe('lv_light');
+    expect(store.getState().proceedToGoNoGo()).toBe(true);
+    expect(store.getState().phase).toBe('GO_NO_GO');
+
+    // ERB-1L Launch Capacity fails -> confirmGoForLaunch is refused!
+    expect(store.getState().confirmGoForLaunch()).toBe(false);
+    expect(store.getState().phase).toBe('GO_NO_GO');
+
+    // Return to LAUNCH_VEHICLE and select lv_medium (9,500 kg to LEO)
+    expect(store.getState().goTo('LAUNCH_VEHICLE')).toBe(true);
+    expect(store.getState().selectLaunchVehicle('lv_medium')).toBe(true);
+    expect(store.getState().proceedToGoNoGo()).toBe(true);
+    expect(store.getState().confirmGoForLaunch()).toBe(true);
+    expect(store.getState().phase).toBe('ROLLOUT');
+  });
+
+  it('transitions from ROLLOUT to LAUNCH and completes into JOURNEY', () => {
+    const store = trajectoryReadyStore();
+    store.getState().proceedToLaunchVehicle();
+    store.getState().selectLaunchVehicle('lv_medium');
+    store.getState().proceedToGoNoGo();
+    expect(store.getState().confirmGoForLaunch()).toBe(true);
+    expect(store.getState().phase).toBe('ROLLOUT');
+
+    expect(store.getState().startLaunch()).toBe(true);
+    expect(store.getState().phase).toBe('LAUNCH');
+
+    const insertionResult = {
+      optionId: 'right',
+      correct: true,
+      explanation: 'Correct!',
+      consequence: {},
+    };
+    expect(
+      store.getState().completeLaunch({
+        vehicleId: 'lv_medium',
+        ignitionStatus: 'clean',
+        ignitionBonusDv: 25,
+        maxQHandled: true,
+        structuralWarning: false,
+        peakDynamicPressureKPa: 25.4,
+        finalAltitudeKm: 400,
+        finalVelocityKms: 7.67,
+        deltaVMargin: 120,
+        insertionResult,
+      }),
+    ).toBe(true);
+
+    expect(store.getState().phase).toBe('JOURNEY');
+    expect(store.getState().launchResult?.ignitionStatus).toBe('clean');
+    expect(store.getState().challengeResults).toHaveLength(1);
+    expect(store.getState().challengeResults[0].correct).toBe(true);
+  });
+});
