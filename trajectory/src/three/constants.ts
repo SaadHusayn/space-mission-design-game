@@ -10,6 +10,10 @@ export const TEXTURES = {
   earthNormal: '/textures/earth_normal.webp',
   earthSpecular: '/textures/earth_specular.webp',
   milkyWay: '/textures/milky_way.webp',
+  moon: '/textures/moon.webp',
+  mars: '/textures/mars.webp',
+  jupiter: '/textures/jupiter.webp',
+  sun: '/textures/sun.webp',
 } as const;
 
 export const MODELS = {

@@ -10,15 +10,16 @@ tests every design choice, and the mission report explains why the mission succe
 
 ## Status
 
-**Phases 01–03 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
+**Phases 01–04 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
 
 | Phase | State |
 |---|---|
 | P01 Foundation: project, 3D canvas, scene switching, loader, title screen, asset pipeline, CI | ✅ built |
 | P02 Core logic and physics engine: physics, data, design totals, Engineering Review, flight simulation, events, scoring, physics challenges (148 tests) | ✅ built |
 | P03 Recruitment, crew and training: cutscenes, crew setup (solo or up to 4), 7-step training, mission patch | ✅ built |
-| P04 Mission briefing and pathway map | next |
-| P05–P11 | planned |
+| P04 Mission briefing and pathways: 3D pathway map, chapter unlocks, briefing cutscenes, mission contract | ✅ built |
+| P05 Spacecraft assembly and Engineering Review | next |
+| P06–P11 | planned |
 
 ## Run it
 
@@ -41,7 +42,7 @@ npm run dev        # http://localhost:3000  → press PLAY (or open /play)
 | `npm run assets:models` | Regenerate the placeholder GLB and optimise every model in `assets-src/models` |
 | `npm run assets:textures -- <folder>` | Convert downloaded source textures into `public/textures` |
 
-Add `?debug` to the `/play` URL for an FPS panel.
+URL options for `/play`: `?debug` shows an FPS panel and exposes the 3D scene as `window.__game3d`; `?unlock=all` opens every chapter.
 
 ## Tech
 

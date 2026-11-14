@@ -10,6 +10,7 @@ import { Planet } from '@/three/Planet';
 import { Starfield } from '@/three/Starfield';
 
 import { Astronaut } from './Figures';
+import { SceneBackground } from '@/three/SceneBackground';
 
 /** Training centrifuge: a long arm spinning a crew pod. */
 export function CentrifugeSet({ reducedMotion = false }: { reducedMotion?: boolean }) {
@@ -19,7 +20,7 @@ export function CentrifugeSet({ reducedMotion = false }: { reducedMotion?: boole
   });
   return (
     <group>
-      <color attach="background" args={['#0a0d12']} />
+      <SceneBackground color="#0a0d12" />
       <hemisphereLight args={['#b9c7e0', '#14100c', 0.45]} />
       <spotLight position={[0, 14, 0]} angle={0.9} penumbra={0.7} intensity={140} distance={40} castShadow />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -133,8 +134,7 @@ export function PoolSet() {
   });
   return (
     <group>
-      <color attach="background" args={['#021624']} />
-      <fog attach="fog" args={['#05324a', 4, 24]} />
+      <SceneBackground color="#021624" fog={[4, 24]} fogColor="#05324a" />
       <ambientLight intensity={0.4} color="#6fd0ff" />
       <directionalLight position={[2, 10, 4]} intensity={1.4} color="#bdf0ff" />
       <pointLight position={[0, -2, 2]} intensity={10} color="#2bb3ff" distance={12} />

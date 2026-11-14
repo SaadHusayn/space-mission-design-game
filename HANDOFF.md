@@ -1,7 +1,7 @@
 # HANDOFF: TRAJECTORY: Pathways Beyond
 
 > **Read this first if you are a new agent or teammate picking up the project.**
-> Last updated: 2026-11-14 · Current phase: **P03 done → next: P04 (Mission briefing & pathways)**
+> Last updated: 2026-11-14 · Current phase: **P04 done → next: P05 (Spacecraft assembly & Engineering Review)**
 
 ---
 
@@ -36,11 +36,12 @@ hazards test the design. A report explains why the mission succeeded or failed.
 | P01 Foundation | ✅ Done | Title scene (3D Earth), scene switch, loader, settings, asset pipeline, CI file. Build notes at the end of `implementation-plan/phase-01-foundation.md` |
 | P02 Core logic & physics | ✅ Done | 148 tests. Build notes at the end of `implementation-plan/phase-02-core-logic-and-physics-engine.md` |
 | P03 Recruitment, crew & training | ✅ Done | Cutscenes, crew setup, 7-step training, graduation. Build notes at the end of `implementation-plan/phase-03-recruitment-crew-training.md` |
-| P04–P11 | ⏳ Not started | Specs in `implementation-plan/phase-*.md` |
+| P04 Mission briefing & pathways | ✅ Done | 3D pathway map, per-pathway briefing, mission contract screen. Build notes at the end of `implementation-plan/phase-04-mission-briefing-and-pathways.md` |
+| P05–P11 | ⏳ Not started | Specs in `implementation-plan/phase-*.md` |
 
 ## 4. Current phase progress (update as you go)
 
-**Next up: P04** (`implementation-plan/phase-04-mission-briefing-and-pathways.md`): replace `src/scenes/ChapterSelect/ChapterSelectPlaceholder.tsx` with the 3D pathway map, add the briefing cutscene (reuse `cutscenes/`), and the objective/requirements screen that stores the mission contract (`createMission` from `@/game`).
+**Next up: P05** (`implementation-plan/phase-05-spacecraft-assembly-and-review.md`): replace the ASSEMBLY stand-in (`ModelPreviewScene` + `ui/PreviewHud.tsx`) with the 3D assembly bay. Use `store.mission` + `createMission()` for the mission, `summarizeDesign`/`reviewDesign` from `@/game` for the HUD and ERB, `ui/ResourcePanel.tsx` (already built) for live resources, and procedural part meshes (team decision: code-built shapes). Add a Playwright spec.
 
 P03 files: `src/game/core/{crew,prologue,patch}.ts` (+ tests), `src/game/data/story.ts`, `src/cutscenes/*` (timeline, scripts CS-00..02, director, overlay), `src/sets/*` (3D sets built from primitives), `src/scenes/{Prologue,Training,ChapterSelect}/*`, `src/ui/{CrewSetup,DialogueBox,PhysicsConsole,ResourcePanel,PatchMaker,MissionPatch,CrewBadge}.tsx`.
 
@@ -119,11 +120,15 @@ These were not specified by the team. Each one can be changed.
 | D23 | **Cutscenes are always skippable**; camera moves use the project's own timeline maths, not GSAP | Repeat players and testers; one less dependency | `src/cutscenes/` |
 | D24 | **Hot-seat crew setup on one shared screen**; pass-the-device screens come with voting in P08 | Simpler first version | `src/ui/CrewSetup.tsx` |
 | D25 | **Pushing to GitHub skipped for now** (team's choice). Commits are local only | No `gh` CLI or stored GitHub login | — |
+| D26 | **Browser tests use Playwright** with the installed Google Chrome (team rule) | Team request | `trajectory/playwright.config.ts`, `tests/e2e/` |
+| D27 | Chapter unlock chain: LEO → Moon → Mars → Jupiter → both Beyond chapters; one star unlocks the next | Plan order | `src/game/core/progress.ts` |
+| D28 | `?unlock=all` opens every chapter; `?debug` shows FPS and exposes `window.__game3d` | Testing and demos | `scenes/PathwayMap/mapStore.ts`, `components/GameRoot.tsx` |
+| D29 | A chapter list sits next to the 3D map (phones, keyboard, overlapping labels) | Usability | `scenes/PathwayMap/PathwayHud.tsx` |
 | D14 | Crew radiation limit in game = **1,000 mSv per mission** | Based on space-agency career limits of about 0.6–1 Sv; keeps Mars possible with shielding | `src/game/sim/review.ts` |
 
 ## 7. Open questions for the team
 
-1. Keep the title **TRAJECTORY: Pathways Beyond**? (D1)
+1. **Game title: the team wants a new, more relevant name** (TRAJECTORY felt odd). Candidates to offer: *Mission Architect: Pathways to the Stars* (recommended), *Launch Window*, *Astro Architects*, *Mission Forge*. Also: rename the `trajectory/` folder and the `trajectory:settings` save key to match? (D1)
 2. **Deadline / hackathon dates?** Decides how many chapters ship (plan says Ch 1, 2, 4 are Must; Ch 3, 5b Should; Ch 5a Could).
 3. **Vercel account** for the public link (needed for T3). Run `npx vercel` in `trajectory/`.
 4. Who makes the **real 3D models** in Blender? Conventions are in `trajectory/README.md` (metres, +Y up, `part_*`, `socket_*`).

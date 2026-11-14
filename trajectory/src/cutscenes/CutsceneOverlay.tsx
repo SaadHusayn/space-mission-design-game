@@ -5,18 +5,16 @@ import { useEffect, useRef, useState } from 'react';
 import { SPEAKERS } from '@/game/data/story';
 
 import { cutsceneStore, useCutscene } from './cutsceneStore';
-import { CUTSCENES } from './scripts';
 
 const HOLD_TO_SKIP_MS = 700;
 
 /** Letterbox bars, subtitles with the speaker, and next / skip controls. */
 export function CutsceneOverlay() {
-  const scriptId = useCutscene((state) => state.scriptId);
+  const script = useCutscene((state) => state.script);
   const index = useCutscene((state) => state.index);
   const [holding, setHolding] = useState(false);
   const holdTimer = useRef<number | null>(null);
 
-  const script = scriptId ? CUTSCENES[scriptId as keyof typeof CUTSCENES] : null;
   const shot = script?.shots[index];
 
   useEffect(() => {

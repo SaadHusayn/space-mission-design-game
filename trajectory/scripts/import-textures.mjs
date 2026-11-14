@@ -28,6 +28,10 @@ const JOBS = [
   ['2k_earth_normal_map.tif', 'earth_normal.webp', 90, false],
   ['2k_earth_specular_map.tif', 'earth_specular.webp', 80, true],
   ['2k_stars_milky_way.jpg', 'milky_way.webp', 78, false],
+  ['2k_moon.jpg', 'moon.webp', 82, false],
+  ['2k_mars.jpg', 'mars.webp', 82, false],
+  ['2k_jupiter.jpg', 'jupiter.webp', 82, false],
+  ['2k_sun.jpg', 'sun.webp', 80, false],
 ];
 
 await mkdir(outDir, { recursive: true });

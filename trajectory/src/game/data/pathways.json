@@ -4,6 +4,7 @@
     "chapter": 1,
     "name": "First Light",
     "destination": "Low Earth orbit",
+    "distanceText": "About 400 km above the ground",
     "objective": "Fly a crew of two into orbit, photograph Earth's weather and climate, and bring them home safely.",
     "hazards": [
       "To stay in orbit you need about 7.7 km/s of sideways speed.",
@@ -89,6 +90,7 @@
     "chapter": 2,
     "name": "Return to the Moon",
     "destination": "Lunar orbit",
+    "distanceText": "384,400 km from Earth",
     "objective": "Orbit the Moon with a crew of two and map water ice hiding in the dark craters near its poles.",
     "hazards": [
       "The trip takes about 3 days each way.",
@@ -169,6 +171,7 @@
     "chapter": 3,
     "name": "The Long Road",
     "destination": "Mars orbit",
+    "distanceText": "55 to 400 million km from Earth",
     "objective": "Carry a crew of four into orbit around Mars to study its thin atmosphere, then bring them home.",
     "hazards": [
       "About 259 days each way on the most efficient path.",
@@ -253,6 +256,7 @@
     "chapter": 4,
     "name": "The Giant",
     "destination": "Jupiter orbit",
+    "distanceText": "588 to 968 million km from Earth",
     "objective": "Put a robotic probe into orbit around Jupiter to measure its magnetic field and look deep into its atmosphere.",
     "hazards": [
       "Sunlight at Jupiter is only 3.7% as strong as at Earth.",
@@ -345,6 +349,7 @@
     "chapter": 5,
     "name": "Beyond: The Edge",
     "destination": "The heliopause (~120 AU)",
+    "distanceText": "About 120 AU (18 billion km) from the Sun",
     "objective": "Send a probe past the heliopause, the edge of the Sun's bubble about 120 AU away, to sample the space between the stars.",
     "hazards": [
       "At 120 AU, sunlight is 14,400 times weaker than at Earth: solar panels are useless.",
@@ -430,6 +435,7 @@
     "chapter": 5,
     "name": "Beyond: Other Worlds",
     "destination": "Sun–Earth L2",
+    "distanceText": "L2 is 1.5 million km away; TRAPPIST-1 is 40 light-years away",
     "objective": "Place a space telescope at Sun–Earth L2 and find Earth-sized planets around other stars by catching them passing in front of their stars.",
     "hazards": [
       "L2 is about 1.5 million km away, four times farther than the Moon.",

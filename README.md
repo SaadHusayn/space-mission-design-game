@@ -36,5 +36,5 @@ npm run dev     # open http://localhost:3000 and press PLAY
 
 ## Current status
 
-Phases 01 (foundation), 02 (game rules and physics engine) and 03 (astronaut recruitment, crew setup and training) are done, with 171 tests. Next: Phase 04 (mission briefing and pathway map).
+Phases 01–04 are done: foundation, game rules and physics engine, astronaut recruitment and training, and the 3D pathway map with mission briefings (183 unit tests, 8 Playwright browser tests). Next: Phase 05 (spacecraft assembly and Engineering Review).
 See [HANDOFF.md](HANDOFF.md) for details.

@@ -63,3 +63,33 @@ public/models/{mission_control,holo_table}.glb · public/textures/{moon,mars,jup
 ## 7. Risks and tips
 - Don't overload the map. Show the details only on hover/selection.
 - Distances aren't to scale. Show a "Not to scale" note and real numbers in text.
+
+---
+
+## 8. Build notes (P04 as built)
+
+**Status: built and checked.** 183 unit tests and 8 Playwright browser tests pass (desktop + phone); lint, typecheck and production build are clean.
+
+| Acceptance criterion | Result |
+|---|---|
+| Pathway map shows all 6 pathways; Ch 1 unlocked, others locked with their condition | ✅ 3D map + chapter list; locked chapters say which chapter to earn a star on |
+| Selecting a pathway → skippable briefing → objective screen with requirements, budget, lifetime, critical ★, crewed/robotic | ✅ Per-pathway briefing cutscene (Director Hale + engineers, hologram of the destination) → mission contract screen |
+| Mission contract saved and visible during assembly | 🟡 Saved in the store (`mission`); showing it during assembly is P05's job |
+| A non-space tester can say what they must achieve | 🟡 Needs a human playtest |
+| Map ≥ 60 fps | ✅ ~60 fps on the dev machine |
+
+### Built
+- Logic: `game/core/progress.ts` (unlock chain, best results, sanitising), `game/sim/requirements.ts` (mission contract, plain-language durations and travel times), briefing lines in `game/data/story.ts`, `distanceText` on every pathway, store actions `selectPathway`, `openObjective`, `acceptMission`, `backToMap`, `recordMissionResult`.
+- 3D: `scenes/PathwayMap/` (Sun, Earth, Moon, Mars, Jupiter, L2, routes, heliosphere bubble, TRAPPIST-1 marker, camera that flies to the chosen pathway), `sets/BriefingSet.tsx` (mission-control holo-table with a hologram per destination), new `three/Sun.tsx`, `SimplePlanet.tsx`, `Heliosphere.tsx`, `SceneBackground.tsx`.
+- Screens: pathway details panel + chapter list, briefing cutscene (built per pathway by `cutscenes/briefing.ts`), objective screen.
+- Tests: `src/game/core/progress.test.ts`, `src/cutscenes/briefing.test.ts`, `tests/e2e/pathways.spec.ts`.
+
+### Decisions and differences from the plan
+- **Unlock chain:** Moon after Earth orbit, Mars after Moon, Jupiter after Mars; both "Beyond" chapters after Jupiter. One star (a partial success) is enough.
+- **`?unlock=all`** in the URL opens every chapter (testing and demos). **`?debug`** shows an FPS panel and exposes the 3D scene as `window.__game3d` for debugging.
+- Added a **chapter list** next to the 3D map: easier on phones and with a keyboard, and works when labels overlap.
+- Moon, Mars, Jupiter and Sun textures from Solar System Scope (CC BY 4.0), credited.
+- Not done (plan "Could"): Sandbox entry on the map.
+
+### Bug fixed along the way
+`<color attach="background">` / `<fog attach="fog">` inside a group attach to the group, not the scene, so every set's background and fog had silently never applied. All sets now use `three/SceneBackground.tsx`, which sets and resets the scene's background and fog explicitly.

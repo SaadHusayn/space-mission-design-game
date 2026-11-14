@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 const ASSETS = [
   {
-    name: "Earth day, night, clouds, normal and specular maps; Milky Way panorama (2K)",
+    name: "Earth (day, night, clouds, normal, specular), Moon, Mars, Jupiter and Sun maps; Milky Way panorama (2K)",
     author: "Solar System Scope",
     licence: "CC BY 4.0",
     href: "https://www.solarsystemscope.com/textures/",

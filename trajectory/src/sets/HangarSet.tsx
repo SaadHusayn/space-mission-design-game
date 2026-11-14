@@ -4,6 +4,7 @@ import { Environment, Grid, Lightformer } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, type ReactNode } from 'react';
 import type { Group } from 'three';
+import { SceneBackground } from '@/three/SceneBackground';
 
 interface HangarSetProps {
   /** 0..1: overall brightness (dim for the transmission scene). */
@@ -47,8 +48,7 @@ function HoloTable({ position }: { position: [number, number, number] }) {
 export function HangarSet({ brightness = 1, holoTable = true, children }: HangarSetProps) {
   return (
     <group>
-      <color attach="background" args={['#070b14']} />
-      <fog attach="fog" args={['#070b14', 22, 60]} />
+      <SceneBackground color="#070b14" fog={[22, 60]} />
       <hemisphereLight args={['#c8d8ff', '#1a1f2a', 0.35 * brightness]} />
       <directionalLight position={[6, 14, 8]} intensity={1.6 * brightness} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004}>
         <orthographicCamera attach="shadow-camera" args={[-14, 14, 14, -14, 1, 40]} />

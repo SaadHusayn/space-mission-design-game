@@ -1,14 +1,14 @@
 'use client';
 
 import { Starfield } from '@/three/Starfield';
+import { SceneBackground } from '@/three/SceneBackground';
 
 /** A launch pad at night: tower, rocket and floodlights. */
 export function LaunchPadSet() {
   const towerLevels = Array.from({ length: 12 }, (_, i) => i);
   return (
     <group>
-      <color attach="background" args={['#03060d']} />
-      <fog attach="fog" args={['#03060d', 30, 90]} />
+      <SceneBackground color="#03060d" fog={[30, 90]} />
       <Starfield count={1800} milkyWay={0.55} seed={3} />
       <hemisphereLight args={['#5d7fb8', '#0a0d14', 0.25]} />
 

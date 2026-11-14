@@ -10,7 +10,7 @@ Every external asset must be listed here **before** it is committed.
 
 | File(s) in `public/textures/` | Source | Author | Licence | Changes |
 |---|---|---|---|---|
-| `earth_day.webp`, `earth_night.webp`, `earth_clouds.webp`, `earth_normal.webp`, `earth_specular.webp`, `milky_way.webp` | https://www.solarsystemscope.com/textures/ (2K set) | Solar System Scope | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Resized to 2048×1024, converted to WebP; clouds and specular converted to greyscale (`scripts/import-textures.mjs`) |
+| `earth_day.webp`, `earth_night.webp`, `earth_clouds.webp`, `earth_normal.webp`, `earth_specular.webp`, `milky_way.webp`, `moon.webp`, `mars.webp`, `jupiter.webp`, `sun.webp` | https://www.solarsystemscope.com/textures/ (2K set) | Solar System Scope | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | Resized to 2048×1024, converted to WebP; clouds and specular converted to greyscale (`scripts/import-textures.mjs`) |
 
 ## 3D models
 

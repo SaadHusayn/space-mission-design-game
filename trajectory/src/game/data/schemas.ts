@@ -264,6 +264,8 @@ export const PathwaySchema = z.object({
   chapter: z.number().int().min(1),
   name: z.string().min(1),
   destination: z.string().min(1),
+  /** Real distance in plain words (the map is not to scale). */
+  distanceText: z.string().min(1),
   /** The science question, in one sentence. */
   objective: z.string().min(1),
   /** Why this destination is hard, with real numbers. */

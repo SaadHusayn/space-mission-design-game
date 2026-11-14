@@ -29,6 +29,34 @@ export async function openFresh(page: Page): Promise<void> {
   await expect(page.getByRole('button', { name: 'NEW MISSION' })).toBeVisible();
 }
 
+/** Opens the game as a crew that already finished training (optionally with chapter results). */
+export async function openGraduated(
+  page: Page,
+  progress: Record<string, { stars: number; bestScore: number }> = {},
+  query = '',
+): Promise<void> {
+  await page.goto(`/play${query}`);
+  await page.evaluate((saved) => {
+    const profile = {
+      crew: [
+        { id: 'p1', callSign: 'Nova', avatar: 0, roles: ['commander', 'science'] },
+        { id: 'p2', callSign: 'Comet', avatar: 1, roles: ['engineer', 'comms'] },
+      ],
+      difficulty: 'engineer',
+      patch: { shape: 'shield', symbol: 'orbit', colour: '#7c3aed', motto: 'Per aspera' },
+      prologueDone: true,
+      seenCutscenes: ['CS-00', 'CS-01', 'CS-02'],
+      progress: saved,
+    };
+    localStorage.setItem(
+      'trajectory:settings',
+      JSON.stringify({ state: { settings: { quality: 'high', reducedMotion: false }, profile }, version: 2 }),
+    );
+  }, progress);
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'CONTINUE' })).toBeVisible();
+}
+
 /** Measures frames per second over a short window. */
 export async function measureFps(page: Page, ms = 2000): Promise<number> {
   return page.evaluate(

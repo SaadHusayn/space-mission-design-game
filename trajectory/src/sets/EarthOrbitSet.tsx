@@ -9,6 +9,7 @@ import { Planet } from '@/three/Planet';
 import { ProbePlaceholder } from '@/three/ProbePlaceholder';
 import { Starfield } from '@/three/Starfield';
 import { SunLight } from '@/three/SunLight';
+import { SceneBackground } from '@/three/SceneBackground';
 
 export const EARTH_RADIUS = 2;
 const EARTH_TEXTURES = {
@@ -38,7 +39,7 @@ function OrbitingProbe({ speed }: { speed: number }) {
 export function EarthOrbitSet({ reducedMotion = false, lowQuality = false }: { reducedMotion?: boolean; lowQuality?: boolean }) {
   return (
     <>
-      <color attach="background" args={['#02040a']} />
+      <SceneBackground />
       <Starfield count={lowQuality ? 1200 : 2600} />
       <SunLight direction={SUN_DIRECTION} />
       <Planet

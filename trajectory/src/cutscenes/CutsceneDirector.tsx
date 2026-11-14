@@ -8,6 +8,7 @@ import { gameStore } from '@/game/core/store';
 import { EarthOrbitSet } from '@/sets/EarthOrbitSet';
 import { HangarSet } from '@/sets/HangarSet';
 import { LaunchPadSet } from '@/sets/LaunchPadSet';
+import { BriefingSet } from '@/sets/BriefingSet';
 import { MessageSet } from '@/sets/MessageSet';
 import { CentrifugeSet, PoolSet, SimulatorSet } from '@/sets/TrainingSets';
 
@@ -32,6 +33,8 @@ function ShotSet({ set }: { set: SetId }) {
       return <PoolSet />;
     case 'hangar':
       return <HangarSet />;
+    case 'briefing':
+      return <BriefingSet />;
   }
 }
 
@@ -57,13 +60,13 @@ export function CutsceneDirector({ script, onComplete }: CutsceneDirectorProps) 
   }, [onComplete]);
 
   useEffect(() => {
-    cutsceneStore.getState().start(script.id);
+    cutsceneStore.getState().start(script);
     time.current = 0;
     finished.current = false;
     handledNext.current = 0;
     current.current = 0;
     return () => cutsceneStore.getState().stop();
-  }, [script.id]);
+  }, [script]);
 
   useFrame((state, delta) => {
     if (finished.current) return;

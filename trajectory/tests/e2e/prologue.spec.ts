@@ -109,10 +109,9 @@ test('the whole prologue: cutscenes, crew setup, training and graduation', async
   await snap(page, '12-graduation');
   await page.getByRole('button', { name: 'GO TO MISSION CONTROL' }).click();
 
-  // Mission Control shows the crew; the save survives a reload.
-  await expect(page.getByRole('heading', { name: 'Crew ready' })).toBeVisible();
-  await expect(page.getByText('Nova')).toBeVisible();
-  await expect(page.getByText('Comet')).toBeVisible();
+  // Mission Control opens the pathway map; the save survives a reload.
+  await expect(page.getByText('Choose your pathway')).toBeVisible();
+  await expect(page.getByRole('img', { name: /planet/ })).toBeVisible();
   await snap(page, '13-mission-control');
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('trajectory:settings') ?? '{}'));
   expect(saved.state.profile.prologueDone).toBe(true);

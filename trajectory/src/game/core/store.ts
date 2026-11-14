@@ -7,10 +7,11 @@
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
-import type { Difficulty } from '../types';
+import type { Difficulty, PathwayId } from '../types';
 import { AVATAR_COLOURS, MAX_CREW, ROLE_IDS, createCrew, type CrewMember } from './crew';
 import { canTransition, type Phase } from './machine';
 import { DEFAULT_PATCH, sanitisePatch, type MissionPatch } from './patch';
+import { isUnlocked, recordResult, sanitiseProgress, type Progress } from './progress';
 import { isPrologueStep, nextPrologueStep, type PrologueStep } from './prologue';
 
 export type Quality = 'low' | 'high';
@@ -31,6 +32,14 @@ export interface Profile {
   prologueDone: boolean;
   /** Cutscenes already watched. */
   seenCutscenes: string[];
+  /** Best result per pathway (unlocks the next chapters). */
+  progress: Progress;
+}
+
+/** The mission being planned right now. */
+export interface CurrentMission {
+  pathwayId: PathwayId;
+  trajectoryId: string | null;
 }
 
 export interface GameState {
@@ -39,6 +48,7 @@ export interface GameState {
   settingsOpen: boolean;
   profile: Profile;
   prologueStep: PrologueStep;
+  mission: CurrentMission | null;
 
   /** Moves to another phase. Returns false if the transition isn't allowed. */
   goTo: (phase: Phase) => boolean;
@@ -53,6 +63,17 @@ export interface GameState {
   startPrologue: (step?: PrologueStep) => boolean;
   /** Moves to the next prologue step; after graduation, opens chapter select. */
   advancePrologue: () => void;
+
+  /** Chapter select → briefing for a pathway. Refused if the pathway is locked (unless `unlockAll`). */
+  selectPathway: (pathwayId: PathwayId, unlockAll?: boolean) => boolean;
+  /** Briefing → objective screen. */
+  openObjective: () => boolean;
+  /** Objective → spacecraft assembly. */
+  acceptMission: () => boolean;
+  /** Briefing or objective → back to the map. */
+  backToMap: () => boolean;
+  /** Saves a finished mission's stars and score. */
+  recordMissionResult: (pathwayId: PathwayId, stars: number, score: number) => void;
 }
 
 export interface GameStoreOptions {
@@ -65,7 +86,7 @@ export interface GameStoreOptions {
 export const SETTINGS_STORAGE_KEY = 'trajectory:settings';
 
 export function defaultProfile(): Profile {
-  return { crew: createCrew(1), difficulty: 'engineer', patch: { ...DEFAULT_PATCH }, prologueDone: false, seenCutscenes: [] };
+  return { crew: createCrew(1), difficulty: 'engineer', patch: { ...DEFAULT_PATCH }, prologueDone: false, seenCutscenes: [], progress: {} };
 }
 
 /** Cleans a profile loaded from storage, so a damaged or old save can't break the game. */
@@ -91,6 +112,7 @@ export function sanitiseProfile(value: unknown): Profile {
     patch: sanitisePatch(input.patch),
     prologueDone: input.prologueDone === true,
     seenCutscenes: Array.isArray(input.seenCutscenes) ? input.seenCutscenes.filter((id) => typeof id === 'string').slice(0, 50) : [],
+    progress: sanitiseProgress(input.progress),
   };
 }
 
@@ -106,6 +128,7 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     settingsOpen: false,
     profile: defaultProfile(),
     prologueStep: 'intro',
+    mission: null,
 
     goTo: (phase) => {
       if (!canTransition(get().phase, phase)) return false;
@@ -140,6 +163,18 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
       set({ profile: { ...state.profile, prologueDone: true } });
       get().goTo('CHAPTER_SELECT');
     },
+
+    selectPathway: (pathwayId, unlockAll = false) => {
+      const state = get();
+      if (!isUnlocked(pathwayId, state.profile.progress, unlockAll) || !canTransition(state.phase, 'BRIEFING')) return false;
+      set({ mission: { pathwayId, trajectoryId: null }, phase: 'BRIEFING' });
+      return true;
+    },
+    openObjective: () => (get().mission ? get().goTo('OBJECTIVE') : false),
+    acceptMission: () => (get().mission ? get().goTo('ASSEMBLY') : false),
+    backToMap: () => get().goTo('CHAPTER_SELECT'),
+    recordMissionResult: (pathwayId, stars, score) =>
+      set((state) => ({ profile: { ...state.profile, progress: recordResult(state.profile.progress, pathwayId, stars, score) } })),
   });
 
   if (!storage) return createStore<GameState>()(initializer);

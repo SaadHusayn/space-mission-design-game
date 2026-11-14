@@ -7,7 +7,7 @@ import type { Line } from '@/game/data/story';
 export type Vec3 = readonly [number, number, number];
 
 /** 3D sets a cutscene shot can show. */
-export type SetId = 'launchpad' | 'orbit' | 'message' | 'centrifuge' | 'simulator' | 'pool' | 'hangar';
+export type SetId = 'launchpad' | 'orbit' | 'message' | 'centrifuge' | 'simulator' | 'pool' | 'hangar' | 'briefing';
 
 export interface CutsceneShot {
   set: SetId;

@@ -1,11 +1,15 @@
 'use client';
 
 import { Stats } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useState } from 'react';
 
 import { useGame } from '@/hooks/useGame';
-import { ChapterSelectPlaceholder } from '@/scenes/ChapterSelect/ChapterSelectPlaceholder';
+import { CutsceneOverlay } from '@/cutscenes/CutsceneOverlay';
+import { BriefingCutscene, ObjectiveScene } from '@/scenes/Briefing/BriefingScenes';
+import { ObjectivePanel } from '@/scenes/Briefing/ObjectivePanel';
+import { PathwayHud } from '@/scenes/PathwayMap/PathwayHud';
+import { PathwayMapScene } from '@/scenes/PathwayMap/PathwayMapScene';
 import { ModelPreviewScene } from '@/scenes/ModelPreview/ModelPreviewScene';
 import { PrologueHud } from '@/scenes/Prologue/PrologueHud';
 import { PrologueScene } from '@/scenes/Prologue/PrologueScene';
@@ -18,6 +22,15 @@ import { WebGLFallback } from '@/ui/WebGLFallback';
 
 import { CanvasErrorBoundary } from './CanvasErrorBoundary';
 
+/** With ?debug, exposes the scene and camera to the browser console and tests (window.__game3d). */
+function DebugBridge() {
+  const state = useThree();
+  useEffect(() => {
+    (window as unknown as { __game3d?: unknown }).__game3d = { scene: state.scene, camera: state.camera, gl: state.gl, raycaster: state.raycaster };
+  }, [state.scene, state.camera, state.gl, state.raycaster]);
+  return null;
+}
+
 function supportsWebGL2(): boolean {
   try {
     return document.createElement('canvas').getContext('webgl2') !== null;
@@ -29,8 +42,11 @@ function supportsWebGL2(): boolean {
 /** Picks the 3D scene for the current phase. All scenes share one canvas. */
 function SceneSwitch() {
   const phase = useGame((state) => state.phase);
-  if (phase === 'BOOT' || phase === 'TITLE' || phase === 'CHAPTER_SELECT') return <TitleScene />;
+  if (phase === 'BOOT' || phase === 'TITLE') return <TitleScene />;
   if (phase === 'PROLOGUE') return <PrologueScene />;
+  if (phase === 'CHAPTER_SELECT') return <PathwayMapScene />;
+  if (phase === 'BRIEFING') return <BriefingCutscene />;
+  if (phase === 'OBJECTIVE') return <ObjectiveScene />;
   // Later phases get their own scenes as they are built.
   return <ModelPreviewScene />;
 }
@@ -52,8 +68,10 @@ function HudLayer() {
     <div className="pointer-events-none absolute inset-0 z-10" data-reduced-motion={reducedMotion}>
       {phase === 'TITLE' && <TitleMenu />}
       {phase === 'PROLOGUE' && <PrologueHud />}
-      {phase === 'CHAPTER_SELECT' && <ChapterSelectPlaceholder />}
-      {phase !== 'BOOT' && phase !== 'TITLE' && phase !== 'PROLOGUE' && phase !== 'CHAPTER_SELECT' && <PreviewHud />}
+      {phase === 'CHAPTER_SELECT' && <PathwayHud />}
+      {phase === 'BRIEFING' && <CutsceneOverlay />}
+      {phase === 'OBJECTIVE' && <ObjectivePanel />}
+      {!['BOOT', 'TITLE', 'PROLOGUE', 'CHAPTER_SELECT', 'BRIEFING', 'OBJECTIVE'].includes(phase) && <PreviewHud />}
       <SettingsDialog />
     </div>
   );
@@ -75,12 +93,12 @@ export default function GameRoot() {
           camera={{ fov: 40, near: 0.1, far: 2500, position: [0, 0.45, 7.4] }}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
         >
-          <color attach="background" args={['#02040a']} />
           <Suspense fallback={null}>
             <SceneSwitch />
             <SceneReady />
           </Suspense>
           {debug && <Stats />}
+          {debug && <DebugBridge />}
         </Canvas>
       </CanvasErrorBoundary>
       <Loader />
