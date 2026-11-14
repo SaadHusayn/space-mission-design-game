@@ -1,0 +1,16 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Local environment files (never commit secrets)
+.env
+.env.*
+
+# Generated videos / renders
+brag-output/
