@@ -80,10 +80,12 @@ const why = explainMission(journey, score);
 
 ## 5. How to verify the code
 
+**Browser testing uses Playwright** (team rule): specs in `trajectory/tests/e2e/`, step screenshots in `trajectory/test-results/screens/`. Add a spec for every new phase.
+
 ```bash
 cd trajectory
 npm install
-npm run lint && npm run typecheck && npm test && npm run build
+npm run lint && npm run typecheck && npm test && npm run test:e2e
 npm run dev   # http://localhost:3000/play
 ```
 
@@ -113,7 +115,7 @@ These were not specified by the team. Each one can be changed.
 | D19 | **Survival mode**: when power is short, instruments go off and the radio drops to 20% before the battery drains | Matches how real spacecraft protect themselves | `sim/journey.ts` `SURVIVAL_COMMS_CUT` |
 | D20 | Scoring weights from phase-09 (objectives 30, science 20, engineering 15, efficiency 15, physics 10, decisions 10); a component that doesn't apply is left out and the rest re-weighted | Plan | `sim/scoring.ts` |
 | D21 | Physics challenge mistakes are never game over: they cost a little Δv, science or crew health, and always explain the right reasoning | Challenge text: teach *why* | `challenges/generator.ts` |
-| D22 | P03 **3D sets are simple shapes built in code** (no Blender GLBs yet) | No artist models | `src/sets/` |
+| D22 | **3D sets, figures, parts and rockets are built from code-generated shapes**, as good as possible. ✅ Confirmed by the team; Blender GLBs may replace them later (keep `part_*` / `socket_*` conventions) | No artist models | `src/sets/` |
 | D23 | **Cutscenes are always skippable**; camera moves use the project's own timeline maths, not GSAP | Repeat players and testers; one less dependency | `src/cutscenes/` |
 | D24 | **Hot-seat crew setup on one shared screen**; pass-the-device screens come with voting in P08 | Simpler first version | `src/ui/CrewSetup.tsx` |
 | D25 | **Pushing to GitHub skipped for now** (team's choice). Commits are local only | No `gh` CLI or stored GitHub login | — |

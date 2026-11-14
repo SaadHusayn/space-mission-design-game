@@ -36,6 +36,7 @@ npm run dev        # http://localhost:3000  → press PLAY (or open /play)
 | `npm run lint` | ESLint (also blocks React/Three imports inside `src/game`) |
 | `npm run typecheck` | TypeScript, no output |
 | `npm test` | Unit tests (Vitest) |
+| `npm run test:e2e` | Browser tests (Playwright, uses your installed Google Chrome): builds, starts the server, plays the prologue. Screenshots in `test-results/screens/` |
 | `BALANCE=1 npx vitest run src/game/sim/balance.debug.test.ts --reporter=verbose` | Balance report for the reference designs |
 | `npm run assets:models` | Regenerate the placeholder GLB and optimise every model in `assets-src/models` |
 | `npm run assets:textures -- <folder>` | Convert downloaded source textures into `public/textures` |
