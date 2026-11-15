@@ -18,6 +18,12 @@ Every external asset must be listed here **before** it is committed.
 |---|---|---|
 | `public/models/probe_placeholder.glb` | Generated in code by `scripts/build-placeholder-models.mjs` (Mission Architect team) | Original work |
 
+## Audio
+
+| Source | Author | Licence | Notes |
+|---|---|---|---|
+| Procedural ambient space pads & mission SFX (`src/audio/soundEngine.ts`) | Mission Architect team | Original work | Synthesized in real time via Web Audio API; zero external audio files |
+
 ## Fonts
 
 | Font | Source | Licence |

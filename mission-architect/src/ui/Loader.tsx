@@ -4,11 +4,19 @@ import { useProgress } from '@react-three/drei';
 
 import { useGame } from '@/hooks/useGame';
 
+const LOADING_TIPS = [
+  "A rocket's Δv depends on engine efficiency (Isp) and how much of its mass is propellant.",
+  'Sunlight weakens with the square of distance: at Jupiter, solar power is under 4% of Earth orbit.',
+  'Every gram added to a science instrument requires more fuel, structure, and launch capacity.',
+  'High-gain dish antennas let deep-space probes send science data back across hundreds of millions of km.',
+];
+
 /** Full-screen loading overlay. Fades out when the first scene is ready. */
 export function Loader() {
   const booting = useGame((state) => state.phase === 'BOOT');
   const { progress } = useProgress();
   const percent = Math.round(progress);
+  const tip = LOADING_TIPS[Math.min(LOADING_TIPS.length - 1, Math.floor(percent / 26))];
 
   return (
     <div
@@ -29,6 +37,10 @@ export function Loader() {
         <div className="h-full rounded-full bg-accent transition-[width] duration-300" style={{ width: `${percent}%` }} />
       </div>
       <p className="mt-4 font-mono text-sm tracking-[0.2em] text-muted">PREPARING MISSION CONTROL · {percent}%</p>
+      <p className="mt-6 max-w-md px-6 text-center text-sm text-ink/80">
+        <span className="font-semibold text-accent">Tip: </span>
+        {tip}
+      </p>
     </div>
   );
 }

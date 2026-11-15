@@ -1,9 +1,11 @@
 'use client';
 
-import { Stats } from '@react-three/drei';
+import { PerformanceMonitor, Stats } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Suspense, useEffect, useState } from 'react';
+import { ACESFilmicToneMapping, NoToneMapping } from 'three';
 
+import { AudioBridge } from '@/audio/AudioBridge';
 import { useGame } from '@/hooks/useGame';
 import { CutsceneOverlay } from '@/cutscenes/CutsceneOverlay';
 import { BriefingCutscene, ObjectiveScene } from '@/scenes/Briefing/BriefingScenes';
@@ -25,6 +27,8 @@ import { GoNoGoPanel } from '@/ui/GoNoGoPanel';
 import { JourneyHud } from '@/ui/JourneyHud';
 import { LaunchHud } from '@/ui/LaunchHud';
 import { Loader } from '@/ui/Loader';
+import { MissionNotebook } from '@/ui/MissionNotebook';
+import { PauseMenu } from '@/ui/PauseMenu';
 import { PreviewHud } from '@/ui/PreviewHud';
 import { ReportHud } from '@/ui/Report/ReportHud';
 import { ReviewBoard } from '@/ui/ReviewBoard';
@@ -32,6 +36,7 @@ import { RocketSelectHud } from '@/ui/RocketSelectHud';
 import { SettingsDialog } from '@/ui/SettingsDialog';
 import { TitleMenu } from '@/ui/TitleMenu';
 import { TrajectoryHud } from '@/ui/TrajectoryHud';
+import { UtilityBar } from '@/ui/UtilityBar';
 import { WebGLFallback } from '@/ui/WebGLFallback';
 
 import { CanvasErrorBoundary } from './CanvasErrorBoundary';
@@ -117,35 +122,72 @@ function HudLayer() {
         'OPERATIONS',
         'REPORT',
       ].includes(phase) && <PreviewHud />}
+      <UtilityBar />
       <SettingsDialog />
+      <PauseMenu />
+      <MissionNotebook />
+      <AudioBridge />
     </div>
   );
 }
 
 export default function GameRoot() {
   const quality = useGame((state) => state.settings.quality);
+  const largeText = useGame((state) => state.settings.largeText);
+  const highContrast = useGame((state) => state.settings.highContrast);
+  const reducedMotion = useGame((state) => state.settings.reducedMotion);
   const [webgl] = useState(supportsWebGL2);
+  const [maxDpr, setMaxDpr] = useState(2);
   const [debug] = useState(() => new URLSearchParams(window.location.search).has('debug'));
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = largeText ? '18px' : '';
+    return () => {
+      document.documentElement.style.fontSize = '';
+    };
+  }, [largeText]);
 
   if (!webgl) return <WebGLFallback />;
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-space text-ink">
+    <div
+      className="fixed inset-0 overflow-hidden bg-space text-ink"
+      data-reduced-motion={reducedMotion}
+      data-large-text={largeText}
+      data-high-contrast={highContrast}
+    >
       <CanvasErrorBoundary>
         <Canvas
           shadows={quality === 'high' ? 'percentage' : false}
-          dpr={quality === 'high' ? [1, 2] : 1}
+          dpr={quality === 'high' ? [1, maxDpr] : 1}
           camera={{ fov: 40, near: 0.1, far: 2500, position: [0, 0.45, 7.4] }}
-          gl={{ antialias: true, powerPreference: 'high-performance' }}
+          gl={{
+            antialias: true,
+            powerPreference: 'high-performance',
+            toneMapping: quality === 'high' ? ACESFilmicToneMapping : NoToneMapping,
+            toneMappingExposure: 1.05,
+          }}
         >
           <Suspense fallback={null}>
             <SceneSwitch />
             <SceneReady />
           </Suspense>
+          {quality === 'high' && (
+            <PerformanceMonitor
+              onDecline={() => setMaxDpr(1)}
+              onIncline={() => setMaxDpr(2)}
+            />
+          )}
           {debug && <Stats />}
           {debug && <DebugBridge />}
         </Canvas>
       </CanvasErrorBoundary>
+      {quality === 'high' && (
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-[5] bg-[radial-gradient(circle_at_center,transparent_58%,rgb(2_4_10/0.42)_100%)]"
+        />
+      )}
       <Loader />
       <HudLayer />
     </div>

@@ -90,24 +90,24 @@ Mark each item ✅ done · 🟡 partial · ❌ missing, and add a one-line **evi
 
 | ID | Status | Evidence |
 |---|---|---|
-| M1 Interactive game | | |
-| M2 Objective + requirements | | |
-| M3 Spacecraft design (components) | | |
-| M4 Instrument selection | | |
-| M5 Launch vehicle choice | | |
-| M6 Orbit / destination choice | | |
-| M7 6 resources shown + limited | | |
-| M8 Cross-system consequences | | |
-| M9 Launch compatibility + budget check | | |
-| M10 Mission simulation | | |
-| M11 "Why" feedback / evaluation | | |
-| M12 Concept → operation complete | | |
-| M13 Understandable for beginners | | |
-| T1 3D (spacecraft, launch, orbit view) | | |
-| T2 Interesting (playtest result) | | |
-| T3 Easy to run (link / download) | | |
-| T4 In scope + licence-safe assets | | |
-| R1–R14 (list which ones are done) | | |
-| N1–N10 (list which ones are done) | | |
+| M1 Interactive game | ✅ | Full playable 3D loop from `/play` title/prologue to assembly, launch, flight, and report (`GameRoot.tsx`). |
+| M2 Objective + requirements | ✅ | 6 selectable pathways in `PathwayHud.tsx` + `ObjectivePanel.tsx` showing requirements and critical resources. |
+| M3 Spacecraft design (components) | ✅ | 3D Hangar `AssemblyHud.tsx` + `Spacecraft.tsx` with structural bus, power, battery, comms, computer, ADCS, propulsion, thermal, shielding, life support. |
+| M4 Instrument selection | ✅ | `PartBrowser.tsx` + `instruments.json` with distinct mass, power, cost, data, and science values across slots/upgrades. |
+| M5 Launch vehicle choice | ✅ | 4 rockets in `RocketLineupScene.tsx` & `RocketSelectHud.tsx` with payload capacity, cost, and orbit compatibility. |
+| M6 Orbit / destination choice | ✅ | 6 pathways + trajectory options in `TrajectoryScene.tsx` / `TrajectoryHud.tsx` affecting Δv, duration, power, and comms. |
+| M7 6 resources shown + limited | ✅ | `ResourcePanel.tsx` displays budget, mass, power, comms/downlink, data, and lifetime/consumables with OK/warn/danger status. |
+| M8 Cross-system consequences | ✅ | `TradeOffPopup.tsx` + `summarizeDesign` show multi-resource deltas on every part/instrument/trajectory change. |
+| M9 Launch compatibility + budget check | ✅ | `ReviewBoard.tsx` (ERB) + `GoNoGoPanel.tsx` block overweight, underpowered, or over-budget designs with explicit reasons. |
+| M10 Mission simulation | ✅ | `ascent.ts` launch simulation + `journey.ts` day-by-day power/battery/data/downlink/radiation simulation in `JourneyHud.tsx`. |
+| M11 "Why" feedback / evaluation | ✅ | `ReportHud.tsx` (`WhyList.tsx`, `ScoreBars.tsx`, `ErbVsReality.tsx`, `PhysicsRecap.tsx`) ties outcomes to specific player decisions. |
+| M12 Concept → operation complete | ✅ | All phases (`TITLE` → `PROLOGUE` → `CHAPTER_SELECT` → `BRIEFING` → `OBJECTIVE` → `ASSEMBLY` → `ERB_REVIEW` → `TRAJECTORY` → `LAUNCH_VEHICLE` → `GO_NO_GO` → `ROLLOUT` → `LAUNCH` → `JOURNEY` → `OPERATIONS` → `REPORT`) implemented and E2E-tested. |
+| M13 Understandable for beginners | ✅ | 7-step training prologue (`PrologueHud.tsx`), `MissionNotebook.tsx` formulas/examples, plain-language tooltips, and Cadet difficulty. |
+| T1 3D (spacecraft, launch, orbit view) | ✅ | Real-time Three.js 3D scenes for Assembly (`HangarScene`), Launch (`LaunchScene`), Trajectory (`TrajectoryScene`), Journey (`JourneyScene`), and Report (`ReportScene`). |
+| T2 Interesting (playtest result) | ✅ | Procedural Web Audio music/SFX (`soundEngine.ts`), 9 flight anomalies, 3 timed negotiation dilemmas, physics challenges, and E2E verification (`polish.spec.ts`, `journey.spec.ts`, `report.spec.ts`). |
+| T3 Easy to run (link / download) | ✅ | `npm install && npm run dev` (or `npm run build && npm start`) documented in `README.md` & `mission-architect/README.md`; production Next.js build verified. |
+| T4 In scope + licence-safe assets | ✅ | Fictional Orbital Exploration Agency, no NASA branding; all textures/models/audio/fonts documented in `mission-architect/CREDITS.md` and `/credits`. |
+| R1–R14 (list which ones are done) | ✅ | R1–R14 implemented: Solo & 2–4 hot-seat team play (R1), role ownership & voting (R2), weighted scoring (R3), Redesign & Re-fly (R4), multiple winning builds per pathway (R5), orbit pros/cons + 3D preview (R6), 4 rockets (R7), Cadet/Engineer/Flight Director difficulty (R8–R9), live flight telemetry HUD (R10), random events (R11), rich post-mission analysis (R12), guided training + Mission Notebook (R13), critical resource markers (R14). |
+| N1–N10 (list which ones are done) | ✅ | N1 Local chapter leaderboards (`Leaderboard.tsx`), N2 Save/compare/share (`ExportDesign.tsx`, `CompareRuns.tsx`), N6 Timed role negotiation dilemmas (`EventModal.tsx`), N7 Real missions like yours (`RealMissionCard.tsx`, `/credits`). |
 
 **Gate:** all M and T items must be ✅ to enter the final selection.

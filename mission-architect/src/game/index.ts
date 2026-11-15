@@ -173,3 +173,4 @@ export {
   type LaunchResult,
 } from './sim/ascent';
 export * as physics from './physics';
+export { NOTEBOOK_CARDS, type NotebookCard, type NotebookCategory } from './data/notebook';

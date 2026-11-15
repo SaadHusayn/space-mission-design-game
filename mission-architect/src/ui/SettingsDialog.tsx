@@ -12,7 +12,37 @@ const QUALITY_OPTIONS: { value: Quality; label: string; hint: string }[] = [
   { value: 'low', label: 'Low', hint: 'Best for older laptops' },
 ];
 
-/** Settings: graphics quality and reduced motion. Saved in the browser. */
+interface ToggleRowProps {
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+function ToggleRow({ label, description, checked, onChange }: ToggleRowProps) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-line p-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
+      <span>
+        <span className="block font-bold text-ink">{label}</span>
+        <span className="mt-0.5 block text-sm text-muted">{description}</span>
+      </span>
+      <input
+        type="checkbox"
+        role="switch"
+        className="peer sr-only"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span
+        aria-hidden
+        className="relative h-7 w-12 shrink-0 rounded-full border border-line bg-white/10 transition after:absolute after:left-0.5 after:top-0.5 after:h-[22px] after:w-[22px] after:rounded-full after:bg-muted after:transition-transform peer-checked:border-accent peer-checked:bg-accent/30 peer-checked:after:translate-x-5 peer-checked:after:bg-accent"
+      />
+      <span className="w-8 text-sm font-bold text-muted">{checked ? 'On' : 'Off'}</span>
+    </label>
+  );
+}
+
+/** Settings: graphics quality, audio mixer, and accessibility options. Saved in the browser. */
 export function SettingsDialog() {
   const open = useGame((state) => state.settingsOpen);
   const settings = useGame((state) => state.settings);
@@ -40,7 +70,7 @@ export function SettingsDialog() {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="hud-enter w-full max-w-md rounded-2xl border border-line bg-panel p-7"
+        className="hud-enter max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-panel p-6 shadow-2xl sm:p-7"
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id={titleId} className="text-2xl font-bold text-ink">
@@ -78,24 +108,73 @@ export function SettingsDialog() {
           </div>
         </fieldset>
 
-        <label className="mt-6 flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-line p-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
-          <span>
-            <span className="block font-bold text-ink">Reduced motion</span>
-            <span className="mt-1 block text-sm text-muted">Stops camera drift and slows animation</span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            className="peer sr-only"
+        <fieldset className="mt-6 space-y-3">
+          <legend className="text-sm font-semibold uppercase tracking-[0.2em] text-muted">Audio</legend>
+          <ToggleRow
+            label="Mute all audio"
+            description="Silence ambient music and sound effects"
+            checked={settings.muted}
+            onChange={(value) => setSetting('muted', value)}
+          />
+          <div className="grid gap-3 rounded-xl border border-line p-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="flex items-center justify-between text-sm font-semibold text-ink">
+                <span>Music volume</span>
+                <span className="font-mono text-xs text-muted">{Math.round(settings.musicVolume * 100)}%</span>
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(settings.musicVolume * 100)}
+                onChange={(event) => setSetting('musicVolume', Number(event.target.value) / 100)}
+                className="mt-2 w-full accent-accent"
+              />
+            </label>
+            <label className="block">
+              <span className="flex items-center justify-between text-sm font-semibold text-ink">
+                <span>SFX volume</span>
+                <span className="font-mono text-xs text-muted">{Math.round(settings.sfxVolume * 100)}%</span>
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(settings.sfxVolume * 100)}
+                onChange={(event) => setSetting('sfxVolume', Number(event.target.value) / 100)}
+                className="mt-2 w-full accent-accent"
+              />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset className="mt-6 space-y-3">
+          <legend className="text-sm font-semibold uppercase tracking-[0.2em] text-muted">Accessibility</legend>
+          <ToggleRow
+            label="Reduced motion"
+            description="Stops camera drift and slows animation"
             checked={settings.reducedMotion}
-            onChange={(event) => setSetting('reducedMotion', event.target.checked)}
+            onChange={(value) => setSetting('reducedMotion', value)}
           />
-          <span
-            aria-hidden
-            className="relative h-7 w-12 shrink-0 rounded-full border border-line bg-white/10 transition after:absolute after:left-0.5 after:top-0.5 after:h-[22px] after:w-[22px] after:rounded-full after:bg-muted after:transition-transform peer-checked:border-accent peer-checked:bg-accent/30 peer-checked:after:translate-x-5 peer-checked:after:bg-accent"
+          <ToggleRow
+            label="Large text mode"
+            description="Increases interface font scale for readability"
+            checked={settings.largeText}
+            onChange={(value) => setSetting('largeText', value)}
           />
-          <span className="w-8 text-sm font-bold text-muted">{settings.reducedMotion ? 'On' : 'Off'}</span>
-        </label>
+          <ToggleRow
+            label="High-contrast panels"
+            description="Darkens panel backgrounds and sharpens borders"
+            checked={settings.highContrast}
+            onChange={(value) => setSetting('highContrast', value)}
+          />
+          <ToggleRow
+            label="Subtitles & audio cues"
+            description="Shows live captions for audio cues and dialogue"
+            checked={settings.subtitles}
+            onChange={(value) => setSetting('subtitles', value)}
+          />
+        </fieldset>
 
         <div className="mt-7 flex justify-end">
           <Button onClick={() => setSettingsOpen(false)}>DONE</Button>

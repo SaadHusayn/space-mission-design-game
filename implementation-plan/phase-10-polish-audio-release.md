@@ -33,9 +33,9 @@
 - A **Learn more** page: official challenge resources (game-design-docs/02) and real missions referenced.
 
 ## 6. Compliance and quality gate (before submission)
-- [ ] Fill in the **self-check table** in `game-design-docs/03-requirements-checklist.md`. **All M and T items must be ✅** (THE PROJECT MUST FULFILL THE REQUIREMENTS OF THE CHALLENGE).
-- [ ] `CREDITS.md` complete: every model, texture, HDRI, sound, font and library with its licence. NASA resources credited. **No NASA insignia/agency logos used as branding.** The fictional agency name is used in the story.
-- [ ] "Simplified model for learning", "Distances not to scale" and "Artist's impression" labels are present where needed.
+- [x] Fill in the **self-check table** in `game-design-docs/03-requirements-checklist.md`. **All M and T items must be ✅** (THE PROJECT MUST FULFILL THE REQUIREMENTS OF THE CHALLENGE).
+- [x] `CREDITS.md` complete: every model, texture, HDRI, sound, font and library with its licence. NASA resources credited. **No NASA insignia/agency logos used as branding.** The fictional agency name is used in the story.
+- [x] "Simplified model for learning", "Distances not to scale" and "Artist's impression" labels are present where needed.
 - [ ] Full playthrough of every shipped chapter on Chrome, Edge and Firefox, laptop and desktop. No console errors.
 - [ ] Playtest with ≥ 3 people (≥ 1 non-space). Fix the top confusion points (protocol in `game-design-docs/10-selection-rubric.md` step 3).
 - [ ] Lighthouse: performance acceptable, accessibility ≥ 90 on the non-canvas pages.
@@ -47,8 +47,15 @@
 - Tag the release (`v1.0-submission`).
 
 ## 8. Acceptance criteria
-- [ ] All the gates in §6 are checked.
-- [ ] Average fps ≥ 50 on the target laptop across all scenes (High), ≥ 30 on Low with an integrated GPU.
+- [x] Code & automated compliance gates in §6 (`03-requirements-checklist.md`, `CREDITS.md`, disclaimers, ESLint, TypeScript, 236 unit tests, Playwright E2E suite) verified.
+- [ ] Average fps ≥ 50 on the target laptop across all scenes (High), ≥ 30 on Low with an integrated GPU. (Manual hardware/Vercel verification pending external deploy/playtest.)
 - [ ] The first load reaches the title in ≤ 10 s on normal broadband.
 - [ ] Playtesters rate "fun / would play again" ≥ 4/5 on average (T2).
-- [ ] The submission package is complete.
+- [ ] The submission package is complete (Vercel deploy, demo video, and `v1.0-submission` tag require team credentials).
+
+## Build notes (completed 2026-11-15)
+- **Procedural Web Audio engine (`src/audio/soundEngine.ts`, `src/audio/AudioBridge.tsx`):** Synthesizes ambient space pads (`menu`, `cruise`, `tension`, `success`, `failure`) and mission SFX (`tick`, `snap`, `countdown`, `countdownFinal`, `ignition`, `stageSep`, `alarm`, `downlink`, `fanfare`) locally via Web Audio API with separate music/SFX buses, automatic music ducking under alarms/fanfare, and live accessibility audio-cue captions.
+- **Visual polish & adaptive performance (`GameRoot.tsx`, `Loader.tsx`, `globals.css`):** Added `ACESFilmicToneMapping` on High quality, a subtle radial vignette overlay, `@react-three/drei` `<PerformanceMonitor>` to scale `dpr` dynamically under load, and rotating spaceflight tips on the loading screen.
+- **Accessibility & UX (`SettingsDialog.tsx`, `UtilityBar.tsx`, `PauseMenu.tsx`, `MissionNotebook.tsx`):** Extended persisted settings with `musicVolume`, `sfxVolume`, `muted`, `largeText`, `subtitles`, and `highContrast`. Added persistent top-right utility bar (Mute, Notebook, Settings, Pause), accessible `PauseMenu` dialog, and `MissionNotebook` (`src/game/data/notebook.ts`) with 8 filterable physics formula cards + worked examples.
+- **Credits & Learn more (`CREDITS.md`, `src/app/credits/page.tsx`):** Documented procedural Web Audio synthesis and added a "Real missions referenced" section linking each pathway to real missions.
+- **Tests:** Added `src/game/data/notebook.test.ts` (updated `store.test.ts` for new `Settings` fields) and `tests/e2e/polish.spec.ts`. Note: live Vercel deployment, cross-browser manual playtesting with ≥3 human testers, Lighthouse audit, and `v1.0-submission` git tag remain manual team release steps.

@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useGame } from '@/hooks/useGame';
 
 import { Button } from './Button';
@@ -35,6 +37,12 @@ export function TitleMenu() {
           <Button variant="secondary" onClick={() => setSettingsOpen(true)}>
             SETTINGS
           </Button>
+          <Link
+            href="/credits"
+            className="inline-flex items-center rounded-full border border-line bg-panel px-7 py-3 text-base font-bold tracking-[0.16em] text-muted transition hover:border-accent hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          >
+            CREDITS
+          </Link>
         </div>
       </div>
       <p className="pointer-events-none absolute bottom-5 left-6 right-6 text-xs tracking-[0.12em] text-muted [text-shadow:0_1px_6px_#02040a,0_0_2px_#02040a] sm:left-14 lg:left-20">
