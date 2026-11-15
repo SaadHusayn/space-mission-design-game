@@ -45,8 +45,8 @@ export const TRANSITIONS: Readonly<Record<Phase, readonly Phase[]>> = {
   LAUNCH: ['JOURNEY', 'REPORT'],
   JOURNEY: ['OPERATIONS', 'REPORT'],
   OPERATIONS: ['REPORT'],
-  // Redesign & re-fly returns to assembly with the same design.
-  REPORT: ['ASSEMBLY', 'CHAPTER_SELECT', 'TITLE'],
+  // Redesign & re-fly returns to assembly with the same design; Try another trajectory opens the trajectory room.
+  REPORT: ['ASSEMBLY', 'TRAJECTORY', 'CHAPTER_SELECT', 'TITLE'],
 };
 
 export function isPhase(value: unknown): value is Phase {

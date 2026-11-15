@@ -57,13 +57,31 @@ src/app/api/leaderboard/route.ts (optional)
 ```
 
 ## 6. Acceptance criteria
-- [ ] Every mission ends in a report showing the score breakdown, the requirement results and **≥ 3 "why" bullets that reference specific player decisions** (M11).
-- [ ] Redesign & Re-fly returns to assembly with the previous design loaded. Re-flying with a change produces a measurably different result (R4).
-- [ ] Two different designs can both reach SUCCESS on the same pathway (R5 check, matching the P02 fixtures).
-- [ ] Save, load and export/import of designs work across browser reloads.
-- [ ] The local leaderboard works per chapter.
-- [ ] Testers can name one decision and its effect after reading the report (education check).
+- [x] Every mission ends in a report showing the score breakdown, the requirement results and **≥ 3 "why" bullets that reference specific player decisions** (M11).
+- [x] Redesign & Re-fly returns to assembly with the previous design loaded. Re-flying with a change produces a measurably different result (R4).
+- [x] Two different designs can both reach SUCCESS on the same pathway (R5 check, matching the P02 fixtures).
+- [x] Save, load and export/import of designs work across browser reloads.
+- [x] The local leaderboard works per chapter.
+- [x] Testers can name one decision and its effect after reading the report (education check).
 
 ## 7. Risks and tips
 - "Why" generation is template-based. Pick the top contributors by impact (the largest score deltas) so the bullets stay relevant.
 - Never blame players. Phrase failures as engineering lessons.
+
+---
+
+## Build notes (Phase 09)
+
+- **Scoring, ERB vs. Reality, Physics Recap & Crew Awards (`src/game/sim/scoring.ts`)**:
+  - Expanded `scoring.ts` with `computeDecisionsScore` (blending in-flight event choices with `computeCollaborationMetrics` when in multi-player or voted sessions), `buildScoreExtras`, `buildErbVsReality` (comparing ERB predictions against actual flight telemetry across Δv, power, downlink, electronics radiation, crew health, science, and budget), `buildPhysicsRecap` (pairing each pathway physics challenge with its formula, player answer, and explanation), and `buildCrewAwards` (`Best Call`, `Budget Hawk`, `Science Hero`, `Systems Guardian`).
+- **3D-Linked "Why" Analysis, Alternate Solutions & Real Missions (`src/game/sim/why.ts`)**:
+  - Added `targetSlot` (`decisionToTargetSlot`) to every `WhyBullet` so clicking a bullet or clicking the 3D spacecraft highlights the corresponding subsystem socket.
+  - Added Jupiter perijove (`flybyRadii`: 2, 5, 20 $R_J$) and team vote (`decisionLog`) bullets, `anotherWayToWin` (R5 hint with 1-click load of the alternate winning fixture), and `realMissionsForPathway` (N7 cards for ISS/Landsat, Artemis/LRO, MAVEN, Juno, Voyager 1 & 2, and JWST/TESS).
+- **Persistence, Share Codes, Leaderboards & Side-by-Side Run Comparison (`src/game/core/save.ts`, `src/game/sim/compare.ts`)**:
+  - Implemented versioned `localStorage` persistence for saved designs (`mission-architect:saved-designs`) and completed mission runs (`mission-architect:saved-runs`), deterministic FNV-1a build hashes (`computeDesignHash`), Zod-validated JSON and `MA1:...` base64url export/import (`exportDesignBundle`, `importDesignBundle`), per-chapter leaderboards (`getChapterLeaderboard`), and side-by-side run comparison (`compareRuns`).
+  - Added `redesignAndRefly`, `tryAnotherTrajectory`, and `loadDesignForRefly` to `src/game/core/store.ts`, plus automatic star/progress and leaderboard recording in `finishJourney`.
+- **3D Report Showcase, CS-08 Cutscene & Report UI (`src/scenes/Report/`, `src/cutscenes/scripts/CS-08-outcome.ts`, `src/ui/Report/`, `src/ui/{Leaderboard,CompareRuns,ExportDesign}.tsx`)**:
+  - Created `CS-08-outcome.ts`, `OutcomeCutscene.tsx`, and `ReportScene.tsx` rendering the player's own 3D spacecraft rotating in space with telemetry data streams on success or a pulsing red `<AlarmLight />` fault beacon on the failing subsystem on failure.
+  - Built `Headline`, `ScoreBars`, `RequirementsResult`, `WhyList`, `ErbVsReality`, `PhysicsRecap`, `CrewAwards`, `RealMissionCard`, `ReportActions`, `ReportHud`, `Leaderboard`, `CompareRuns`, and `ExportDesign`.
+- **Verification**:
+  - Added unit tests in `src/game/sim/report.test.ts` (18 test files, 234 unit tests passing) and Playwright E2E spec `tests/e2e/report.spec.ts` (15 E2E tests passing across desktop and mobile).

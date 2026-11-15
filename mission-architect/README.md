@@ -10,7 +10,7 @@ tests every design choice, and the mission report explains why the mission succe
 
 ## Status
 
-**Phases 01–08 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
+**Phases 01–09 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
 
 | Phase | State |
 |---|---|
@@ -22,7 +22,8 @@ tests every design choice, and the mission report explains why the mission succe
 | P06 Trajectory, launch vehicle, launch and orbit: 3D trajectory room, 4-rocket lineup, GO/NO-GO poll, CS-04 rollout, 3D ascent & orbit insertion challenge | ✅ built |
 | P07 Journeys and physics scenarios: 3D Solar System & destination scenes (LEO, Moon, Mars, Jupiter, Interstellar, Exoplanet), live telemetry dashboard, time controls, in-flight physics challenges, light-curve analyzer & distance ladder | ✅ built |
 | P08 Events, crew decisions and team play: 9 flight anomalies + 3 scripted negotiation dilemmas, hardware mitigation checks, NPC advisor bubbles, hot-seat role ownership & proposals, team voting with role-coloured avatars & reaction chips, Commander tie-breaks, 3D alarm/storm/impact effects, and decision log + collaboration metrics | ✅ built |
-| P09–P11 | next / planned |
+| P09 Evaluation, mission report and replay: 3D spacecraft debrief showcase, CS-08 outcome cutscene, weighted score breakdown, contract checklist, 3D-linked "Why" analysis + "Another way to win" hints, ERB vs. Reality table, physics recap, crew awards, real mission cards, local chapter leaderboards, side-by-side run comparison, JSON/MA1 share-code export & import, and Redesign & Re-fly | ✅ built |
+| P10–P11 | next / planned |
 
 ## Run it
 

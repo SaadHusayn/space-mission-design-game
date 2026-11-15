@@ -31,7 +31,9 @@ import {
   startVoteSession,
   type VoteSession,
 } from './votes';
+import { recordRunToStorage, sanitiseDesign } from './save';
 import type { LaunchResult } from '../sim/ascent';
+import { createSavedRunSnapshot } from '../sim/compare';
 import { summarizeDesign } from '../sim/design';
 import {
   evaluateEventMitigations,
@@ -51,6 +53,7 @@ import {
 } from '../sim/journey';
 import { createMission } from '../sim/mission';
 import { reviewDesign } from '../sim/review';
+import { buildScoreExtras, scoreMission } from '../sim/scoring';
 
 export type Quality = 'low' | 'high';
 
@@ -205,8 +208,17 @@ export interface GameState {
   chooseEventOption: (optionId: string, voteSummary?: DecisionLogEntry['voteSummary']) => boolean;
   /** Completes an in-flight physics challenge and applies its consequences to the journey. */
   completeJourneyChallenge: (challengeId: string, result: ChallengeResult) => void;
-  /** Finishes the journey/operations phase and transitions to REPORT. */
+  /** Finishes the journey/operations phase, records mission results, and transitions to REPORT. */
   finishJourney: () => boolean;
+  /** Returns from REPORT to ASSEMBLY keeping the current spacecraft design loaded for modification (Phase 09 §2.10, R4). */
+  redesignAndRefly: () => boolean;
+  /** Switches to the alternate trajectory for the current pathway and opens TRAJECTORY (or ASSEMBLY if ERB fails). */
+  tryAnotherTrajectory: () => boolean;
+  /** Loads a saved, imported, or alternate-fixture design into ASSEMBLY for the mission. */
+  loadDesignForRefly: (
+    design: Design,
+    options?: { pathwayId?: PathwayId; trajectoryId?: string | null; vehicleId?: string | null },
+  ) => boolean;
 
   setCrew: (crew: CrewMember[]) => void;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -883,7 +895,112 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     finishJourney: () => {
       const state = get();
       if (!state.journey?.ended) return false;
-      return state.goTo('REPORT');
+      const moved = state.goTo('REPORT');
+      if (moved) {
+        const extras = buildScoreExtras(
+          state.journey,
+          state.challengeResults,
+          state.profile.crew,
+          state.decisionLog,
+        );
+        const score = scoreMission(state.journey, extras);
+        const pathwayId = state.mission?.pathwayId ?? state.journey.input.mission.pathway.id;
+        get().recordMissionResult(pathwayId, score.stars, score.total);
+        const crewNames = state.profile.crew
+          .map((m) => m.callSign.trim())
+          .filter((name) => name.length > 0);
+        const leadCallSign = crewNames[0] || 'Pathfinder';
+        const snapshot = createSavedRunSnapshot({
+          state: state.journey,
+          score,
+          callSign: leadCallSign,
+          crewNames: crewNames.length > 0 ? crewNames : [leadCallSign],
+          patch: state.profile.patch,
+          difficulty: state.profile.difficulty,
+        });
+        recordRunToStorage(snapshot);
+      }
+      return moved;
+    },
+    redesignAndRefly: () => {
+      const state = get();
+      if (!state.design || !state.mission || !canTransition(state.phase, 'ASSEMBLY')) return false;
+      set({
+        journey: null,
+        launchResult: null,
+        challengeResults: [],
+        completedChallengeIds: [],
+        flybyRadii: null,
+        activeVote: null,
+        lastEventResolution: null,
+        triggeredNegotiationIds: [],
+        phase: 'ASSEMBLY',
+      });
+      return true;
+    },
+    tryAnotherTrajectory: () => {
+      const state = get();
+      if (!state.design || !state.mission) return false;
+      const pathway = getPathway(state.mission.pathwayId);
+      const currentTrajId = state.mission.trajectoryId ?? pathway.trajectories[0]?.id ?? null;
+      const altTraj =
+        pathway.trajectories.find((t) => t.id !== currentTrajId) ?? pathway.trajectories[0] ?? null;
+      const nextTrajId = altTraj?.id ?? currentTrajId;
+      const nextMission: CurrentMission = {
+        pathwayId: state.mission.pathwayId,
+        trajectoryId: nextTrajId,
+      };
+      const context = createMission(
+        nextMission.pathwayId,
+        nextMission.trajectoryId ?? undefined,
+        state.profile.difficulty,
+      );
+      const review = reviewDesign(state.design, context);
+      const targetPhase: Phase =
+        review.passable && canTransition(state.phase, 'TRAJECTORY') ? 'TRAJECTORY' : 'ASSEMBLY';
+      if (!canTransition(state.phase, targetPhase)) return false;
+
+      set({
+        mission: nextMission,
+        journey: null,
+        launchResult: null,
+        challengeResults: [],
+        completedChallengeIds: [],
+        flybyRadii: null,
+        activeVote: null,
+        lastEventResolution: null,
+        triggeredNegotiationIds: [],
+        phase: targetPhase,
+      });
+      return true;
+    },
+    loadDesignForRefly: (design, loadOptions) => {
+      const state = get();
+      const pathwayId = loadOptions?.pathwayId ?? state.mission?.pathwayId ?? 'leo';
+      const trajectoryId =
+        loadOptions?.trajectoryId !== undefined
+          ? loadOptions.trajectoryId
+          : (state.mission?.trajectoryId ?? getPathway(pathwayId).trajectories[0]?.id ?? null);
+      const vehicleId =
+        loadOptions?.vehicleId !== undefined ? loadOptions.vehicleId : state.vehicleId;
+      const clean = sanitiseDesign(design);
+      set({
+        mission: { pathwayId, trajectoryId },
+        design: clean,
+        designPast: state.design ? [...state.designPast, state.design] : [],
+        designFuture: [],
+        vehicleId: vehicleId && gameData.launchVehicleById.has(vehicleId) ? vehicleId : state.vehicleId,
+        journey: null,
+        launchResult: null,
+        challengeResults: [],
+        completedChallengeIds: [],
+        flybyRadii: null,
+        activeVote: null,
+        lastEventResolution: null,
+        triggeredNegotiationIds: [],
+        ...(canTransition(state.phase, 'ASSEMBLY') ? { phase: 'ASSEMBLY' as const } : {}),
+      });
+      return true;
     },
 
     setCrew: (crew) =>
