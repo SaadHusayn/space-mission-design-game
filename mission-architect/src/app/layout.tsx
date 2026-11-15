@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   },
   description:
     "A 3D space mission design game. Join the astronaut class, design a spacecraft with the engineers, launch it, and find out how every trade-off shaped your mission.",
+  other: {
+    "team": "The Astranauts",
+    "si-disclosure":
+      "SI tools assisted in TypeScript/React code, JSON data structuring, and procedural Web Audio synthesis (soundEngine.ts). No SI-generated images/videos or NASA branding used.",
+  },
 };
 
 export const viewport: Viewport = {

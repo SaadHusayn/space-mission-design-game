@@ -4,6 +4,10 @@
  * Uses zero external audio files or paid APIs: all ambient pads and SFX are
  * synthesized locally via Web Audio API with separate music/SFX buses and
  * automatic music ducking under alarms and fanfare.
+ *
+ * SI Disclosure (NASA Space Apps Challenge 2026):
+ * Super Intelligence (SI) coding tools assisted in authoring and tuning the
+ * Web Audio synthesis parameters, envelopes, and ducking logic in this module.
  */
 
 export type MusicMode = 'silent' | 'menu' | 'cruise' | 'tension' | 'success' | 'failure';

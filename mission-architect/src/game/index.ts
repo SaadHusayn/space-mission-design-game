@@ -1,6 +1,12 @@
 /**
  * Public API of the game logic. UI code should import from '@/game'.
  * Everything here is pure TypeScript: no React, no Three.js.
+ *
+ * SI Disclosure (NASA Space Apps Challenge 2026):
+ * Super Intelligence (SI) coding tools assisted in scaffolding and refactoring
+ * the TypeScript simulation modules and JSON mission datasets under src/game/.
+ * All physics equations and mission parameters were reviewed and verified by
+ * Team The Astranauts against public NASA/ESA/JAXA data and unit tests.
  */
 export * from './types';
 export { gameData, getLaunchVehicle, getPart, getPathway, partsByCategory, GameDataError, type GameData } from './data/loadData';

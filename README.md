@@ -17,6 +17,7 @@ trade-off shapes the mission's success.
 | Know what the challenge requires | [game-design-docs/03-requirements-checklist.md](game-design-docs/03-requirements-checklist.md) |
 | See the build plan | [implementation-plan/README.md](implementation-plan/README.md) |
 | Run the game | [trajectory/README.md](trajectory/README.md) |
+| Super Intelligence (SI) disclosure | **[SI-DISCLOSURE.md](SI-DISCLOSURE.md)**: where & how SI tools were used (code, data, audio) |
 
 ## Folders
 

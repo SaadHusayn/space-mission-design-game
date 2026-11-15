@@ -2,6 +2,8 @@
   "name": "mission-architect",
   "version": "0.1.0",
   "private": true,
+  "description": "3D space mission design game by Team The Astranauts for NASA Space Apps Challenge 2026.",
+  "siDisclosure": "Super Intelligence (SI) tools assisted in TypeScript/React/R3F code scaffolding, JSON mission data structuring, and procedural Web Audio synthesis (src/audio/soundEngine.ts). No SI-generated images/videos or NASA branding used.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
