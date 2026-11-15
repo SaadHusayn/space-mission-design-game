@@ -5,16 +5,19 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { AdditiveBlending, DoubleSide, type Group, QuadraticBezierCurve3, Vector3 } from 'three';
 
-import { emptyDesign, liveTelemetry } from '@/game';
+import { emptyDesign, getEventCatalogueEntry, liveTelemetry } from '@/game';
 import type { Design, PathwayId } from '@/game/types';
 import { useGame } from '@/hooks/useGame';
+import { AlarmLight } from '@/three/AlarmLight';
 import { SUN_DIRECTION, TEXTURES } from '@/three/constants';
 import { Heliosphere } from '@/three/Heliosphere';
+import { ImpactBurst } from '@/three/ImpactBurst';
 import { Planet } from '@/three/Planet';
 import { SceneBackground } from '@/three/SceneBackground';
 import { SimplePlanet } from '@/three/SimplePlanet';
 import { Spacecraft } from '@/three/Spacecraft';
 import { Starfield } from '@/three/Starfield';
+import { StormParticles } from '@/three/StormParticles';
 import { Glow, Sun } from '@/three/Sun';
 import { SunLight } from '@/three/SunLight';
 
@@ -777,12 +780,57 @@ export function JourneyScene() {
     ((telemetry?.segment === 'return' && (telemetry?.segmentProgress ?? 0) > 0.65) ||
       Boolean(journey?.checkpoints.some((c) => c.id === 'reentry')));
 
+  const pendingEventId = journey?.pending?.eventId ?? null;
+  const activeEventIds = useMemo(
+    () => (journey ? journey.effects.filter((e) => e.untilDay > journey.day).map((e) => e.eventId) : []),
+    [journey],
+  );
+  const pendingCatalogue = pendingEventId ? getEventCatalogueEntry(pendingEventId) : undefined;
+  const visualCue = pendingCatalogue?.visualCue ?? null;
+
+  const stormActive =
+    visualCue === 'solar_storm' || activeEventIds.includes('solar_storm');
+  const impactActive =
+    visualCue === 'micrometeoroid' || pendingEventId === 'wheel_failure';
+  const commsCutActive =
+    visualCue === 'comms_cut' ||
+    activeEventIds.includes('ground_outage') ||
+    activeEventIds.includes('conjunction');
+  const alarmActive =
+    Boolean(journey?.pending && visualCue !== 'celebration') || Boolean(telemetry?.survivalMode);
+
   return (
     <>
       <SceneBackground />
       <Starfield count={lowQuality ? 1200 : 2400} milkyWay={0.35} seed={19} />
       <SunLight direction={SUN_DIRECTION} />
       <ambientLight intensity={0.22} />
+
+      <AlarmLight active={alarmActive} reducedMotion={reducedMotion} />
+      <StormParticles active={stormActive} reducedMotion={reducedMotion} count={lowQuality ? 90 : 180} />
+      <ImpactBurst active={impactActive} reducedMotion={reducedMotion} />
+      {commsCutActive && viewMode !== 'system' && (
+        <group name="event_comms_cut">
+          <Line
+            points={[
+              [0, 1.1, 0],
+              [-4.5, 2.4, -3],
+            ]}
+            color="#ff5c7a"
+            lineWidth={1.8}
+            dashed
+            dashSize={0.25}
+            gapSize={0.45}
+            transparent
+            opacity={0.85}
+          />
+          <Html position={[-2.2, 1.9, -1.5]} center zIndexRange={[4, 0]}>
+            <div className="pointer-events-none whitespace-nowrap rounded-full border border-bad/70 bg-space/90 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase text-bad">
+              ✕ Comms Link Severed
+            </div>
+          </Html>
+        </group>
+      )}
 
       {viewMode === 'system' && (
         <SystemMapView

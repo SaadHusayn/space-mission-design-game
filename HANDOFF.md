@@ -1,7 +1,7 @@
 # HANDOFF: TRAJECTORY: Pathways Beyond
 
 > **Read this first if you are a new agent or teammate picking up the project.**
-> Last updated: 2026-11-15 · Current phase: **P07 done → next: P08 (Events, crew decisions & team play)**
+> Last updated: 2026-11-15 · Current phase: **P08 done → next: P09 (Evaluation, mission report & replay)**
 
 ---
 
@@ -40,11 +40,14 @@ hazards test the design. A report explains why the mission succeeded or failed.
 | P05 Spacecraft assembly & Engineering Review | ✅ Done | 3D hangar assembly bay, procedural `part_*` meshes on `socket_*` empties, live Resource HUD, Trade-Off popup, Physics Calculator, ERB screen with slot-fix jump & gating. Build notes at the end of `implementation-plan/phase-05-spacecraft-assembly-and-review.md` |
 | P06 Launch vehicle, launch & orbit | ✅ Done | 3D trajectory design room, 4-rocket pad lineup, GO/NO-GO review poll (resolving D11 rocket checks), CS-04 rollout cutscene, interactive 3D launch ascent (`ascent.ts`: ignition timing, Max-Q throttle-down, stage & fairing separation), and orbit insertion physics challenge. Build notes at the end of `implementation-plan/phase-06-launch-and-orbit.md` |
 | P07 Journeys & physics scenarios | ✅ Done | 3D Solar System travel (`System Map`, `Spacecraft Close-Up`, and 6 pathway `Destination Views`: LEO, Moon, Mars, Jupiter, Interstellar Heliopause, and L2 + TRAPPIST-1 artist's impression), live telemetry dashboard (R10), time controls (`1×`–`1000×` + `Next Checkpoint`), in-flight physics challenges (`PhysicsConsole`), `LightCurveChart`, `DistanceLadder`, and checkpoint verification log. Build notes at the end of `implementation-plan/phase-07-journeys-and-physics-scenarios.md` |
-| P08–P11 | ⏳ Not started | Specs in `implementation-plan/phase-*.md` |
+| P08 Events, crew decisions & team play | ✅ Done | 9 flight anomalies + 3 scripted negotiation dilemmas (`events.json`, `advisors.json`), design mitigation status checks, NPC advisor bubbles (`AdvisorBubble`), hot-seat role ownership & proposals (`proposals.ts`), team voting with role-coloured avatars & reaction chips (`votes.ts`, `VotePanel`, `HotseatHandoff`), Commander tie-breaks, timed negotiations (`NegotiationTimer`), 3D event visuals (`AlarmLight`, `StormParticles`, `ImpactBurst`), and full `DecisionLog` + collaboration metrics. Build notes at the end of `implementation-plan/phase-08-events-and-team-decisions.md` |
+| P09–P11 | ⏳ Not started | Specs in `implementation-plan/phase-*.md` |
 
 ## 4. Current phase progress (update as you go)
 
-**Next up: P08** (`implementation-plan/phase-08-events-and-team-decisions.md`): expand in-flight events with role-based crew advisories, team voting / hot-seat pass-the-device decision cards, and commander tie-breaks during `JOURNEY` and `OPERATIONS`.
+**Next up: P09** (`implementation-plan/phase-09-evaluation-report-replay.md`): replace `PreviewHud` in `REPORT` with the full Mission Report screen (score breakdown, contract requirements, "Why" analysis bullets referencing player decisions, ERB vs. Reality table, physics recap, crew awards, local leaderboard, export/import, and Redesign & Re-fly).
+
+P08 files: `src/game/data/{events,advisors}.json`, `src/game/sim/events.ts` (`NEGOTIATION_EVENTS`, `evaluateEventMitigations`, `advisorsForEvent`), `src/game/core/{proposals,votes}.ts` (+ `votes.test.ts`), `src/three/{AlarmLight,StormParticles,ImpactBurst}.tsx`, `src/ui/{EventModal,VotePanel,HotseatHandoff,AdvisorBubble,NegotiationTimer,DecisionLog}.tsx`, `tests/e2e/events-team.spec.ts`.
 
 P07 files: `src/game/sim/journey.ts` (`liveTelemetry`, `journeyChallengeSchedule`, `nextJourneyMilestoneDay`, `applyChallengeToJourney`), `src/scenes/Journey/{journeyViewStore,JourneyScene}.ts(x)`, `src/ui/{JourneyHud,LightCurveChart,DistanceLadder}.tsx`, `tests/e2e/journey.spec.ts`.
 
@@ -138,6 +141,7 @@ These were not specified by the team. Each one can be changed.
 | D31 | **Windows Playwright WebGL2 compatibility**: `--use-angle=gl` is only passed on Linux; Windows uses its native Direct3D 11 ANGLE backend so headless/automated Chrome always initializes WebGL 2 | `--use-angle=gl` disabled WebGL 2 context creation on Windows Chrome | `mission-architect/playwright.config.ts` |
 | D32 | **1D Launch Ascent Simulation (`src/game/sim/ascent.ts`)** models exponential atmospheric density $\rho(h) = \rho_0 e^{-h/H}$, dynamic pressure $q = \frac{1}{2}\rho(h)v^2$, gravity turn altitude/velocity profiles to target parking orbit, T-0 clean ignition bonus ($+25\text{ m/s}$ $\Delta v$), Max-Q throttle-down ($72\%$ throttle vs. $-35\text{ m/s}$ structural attitude-control penalty on tight-margin buses), and Orbit Insertion physics challenge (`orbitSpeed`/`centripetal`/`rocketEquation`) | Keeps launch physics deterministic, pure TypeScript, and fast (~14s at 1× or instant via Skip/4×) while tying every interactive beat to real mission $\Delta v$ margins | `src/game/sim/ascent.ts`, `src/scenes/Launch/LaunchScene.tsx`, `src/ui/LaunchHud.tsx` |
 | D33 | **Unified 3D Journey Scene & Milestone Stepping (`JourneyScene.tsx`, `JourneyHud.tsx`, `journey.ts`)** provides 3 toggleable 3D camera views (`System Map`, `Spacecraft Close-Up`, `Destination View` + `Exoplanet System 3D Artist's Impression`) across all 6 chapters, paired with `1×`/`10×`/`100×`/`1000×` time controls and a `NEXT CHECKPOINT ⏭` milestone stepper that automatically pauses at checkpoints, scheduled pathway physics challenges (`PhysicsConsole`), and in-flight events | Makes both 5-day LEO missions and 33-year interstellar missions smoothly playable and deterministic without dead ends | `src/game/sim/journey.ts`, `src/scenes/Journey/JourneyScene.tsx`, `src/ui/JourneyHud.tsx` |
+| D34 | **Hot-Seat Role Proposals & Timed Negotiation Dilemmas (`proposals.ts`, `votes.ts`, `EventModal.tsx`)** provide an opt-in `"Role Proposals: ON/OFF"` mode in the Assembly hot-seat bar (so rapid solo/co-op assembly stays 1-click while strict cross-role / $>10\%$ budget proposals open a team ballot), pass-the-device handoff curtains (`HotseatHandoff`), Mission Commander tie-breaks, NPC engineer advisor bubbles (`advisors.json`), and 3 scripted 45s negotiation dilemmas (`neg_budget_cut`, `neg_bonus_target`, `neg_bandwidth_clash`) | Balances fast playability with structured 2–4 player role ownership, negotiation tension, and full decision-log tracking | `src/game/core/{proposals,votes}.ts`, `src/ui/{EventModal,VotePanel,AssemblyHud}.tsx` |
 
 ## 7. Open questions for the team
 

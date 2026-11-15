@@ -1,0 +1,186 @@
+{
+  "solar_storm": [
+    {
+      "speaker": "kenji",
+      "recommendedOptionId": "safe_mode",
+      "quote": "Safe mode is the conservative call when solar output drops 30% — if your battery reserve is tight, keeping instruments on can trigger a power blackout."
+    },
+    {
+      "speaker": "ferreira",
+      "recommendedOptionId": "keep_operating",
+      "quote": "Storm aurorae and energetic particle fluxes are priceless science — if your power margin exceeds 30% and you fitted a radiation vault, we can ride it out!"
+    },
+    {
+      "speaker": "okafor",
+      "recommendedOptionId": "shelter",
+      "quote": "On a crewed ship, put the astronauts behind the storm shelter walls immediately while keeping minimal telemetry online."
+    }
+  ],
+  "micrometeoroid": [
+    {
+      "speaker": "kenji",
+      "recommendedOptionId": "reroute",
+      "quote": "Spend the $5M engineering workaround to bypass the damaged solar string and recover half the lost wattage."
+    },
+    {
+      "speaker": "okafor",
+      "recommendedOptionId": "repoint",
+      "quote": "We can feather and re-point the array away from the dust stream — it trims pointing accuracy slightly, but costs $0M and preserves 92% panel health."
+    },
+    {
+      "speaker": "hale",
+      "recommendedOptionId": "accept",
+      "quote": "If you built a generous 25% power margin into your arrays, save the contingency budget and accept the 20% hit."
+    }
+  ],
+  "wheel_failure": [
+    {
+      "speaker": "okafor",
+      "recommendedOptionId": "thrusters",
+      "quote": "Without a redundant wheel, fire the RCS attitude thrusters ($8M ops support) so your telescope and imagers don't blur."
+    },
+    {
+      "speaker": "ferreira",
+      "recommendedOptionId": "spare",
+      "quote": "Spinning up the redundant reaction wheel keeps our arcsecond pointing locked with zero science loss."
+    },
+    {
+      "speaker": "hale",
+      "recommendedOptionId": "accept",
+      "quote": "If we're near our budget ceiling and already ahead of our science target, accept the coarser pointing rather than overspending."
+    }
+  ],
+  "ground_outage": [
+    {
+      "speaker": "echo",
+      "recommendedOptionId": "store",
+      "quote": "Keep the instruments recording into onboard solid-state memory — as long as your flight computer has ≥ 64 Gb storage, we won't drop a single frame."
+    },
+    {
+      "speaker": "kenji",
+      "recommendedOptionId": "pause",
+      "quote": "If your onboard memory buffer is small or nearly full, pause the instruments for 5 days so old high-value data isn't overwritten."
+    }
+  ],
+  "conjunction": [
+    {
+      "speaker": "echo",
+      "recommendedOptionId": "preprogram",
+      "quote": "With an autonomous AI flight computer on board, upload the 14-day sequence and let the spacecraft observe behind the Sun on its own."
+    },
+    {
+      "speaker": "okafor",
+      "recommendedOptionId": "hold",
+      "quote": "If your flight computer lacks autonomy, do NOT pre-program blind — hold attitude in safe loiter until solar radio noise clears."
+    }
+  ],
+  "radiation_upset": [
+    {
+      "speaker": "echo",
+      "recommendedOptionId": "reboot",
+      "quote": "Reboot the flight computer immediately! Losing 2 days of observations is much safer than letting a single-event upset corrupt 10% of our science archive."
+    },
+    {
+      "speaker": "ferreira",
+      "recommendedOptionId": "wait",
+      "quote": "If you installed a radiation-hardened computer (≥ 1,000 krad), its ECC memory scrubs the bit-flip automatically without losing observation time."
+    }
+  ],
+  "crew_illness": [
+    {
+      "speaker": "ferreira",
+      "recommendedOptionId": "rest",
+      "quote": "Increase daily resistance exercise and reduce workload right away — a 5% science dip is minor compared to astronaut bone loss."
+    },
+    {
+      "speaker": "okafor",
+      "recommendedOptionId": "medkit",
+      "quote": "Deploy the medical countermeasure kit and tune spin-habitat RPM ($2M ops support) to restore crew health without cutting science."
+    }
+  ],
+  "bonus_discovery": [
+    {
+      "speaker": "ferreira",
+      "recommendedOptionId": "extend",
+      "quote": "Extend operations by 20%! Follow-up spectra on an unexpected discovery are how good missions become legendary."
+    },
+    {
+      "speaker": "hale",
+      "recommendedOptionId": "end",
+      "quote": "Check your remaining budget and component design life first — if budget is tight, wrap up on schedule and bank the win."
+    }
+  ],
+  "launch_weather": [
+    {
+      "speaker": "okafor",
+      "recommendedOptionId": "wait",
+      "quote": "Scrub for 24 hours ($3M pad turnaround). Upper-level wind shear can damage solar array hinges if your bus is rated below 6 g."
+    },
+    {
+      "speaker": "hale",
+      "recommendedOptionId": "launch",
+      "quote": "If your spacecraft structure is rated for ≥ 6 g, it will shrug off the wind shear without spending $3M."
+    }
+  ],
+  "neg_budget_cut": [
+    {
+      "speaker": "ferreira",
+      "recommendedOptionId": "protect_science",
+      "quote": "Science Specialist priority: protect instrument calibration and observation time even if operations reserve shrinks."
+    },
+    {
+      "speaker": "kenji",
+      "recommendedOptionId": "protect_margins",
+      "quote": "Flight Engineer priority: protect power and thermal margins so an unexpected storm doesn't end the mission."
+    },
+    {
+      "speaker": "echo",
+      "recommendedOptionId": "trim_dsn",
+      "quote": "Comms & Resources priority: compress ground-station passes to save $6M immediately."
+    },
+    {
+      "speaker": "hale",
+      "recommendedOptionId": "balanced_trim",
+      "quote": "Commander compromise: share a 3% trim across all desks so every subsystem stays within operating limits."
+    }
+  ],
+  "neg_bonus_target": [
+    {
+      "speaker": "ferreira",
+      "recommendedOptionId": "slew_all_in",
+      "quote": "Science Specialist priority: slew the spacecraft immediately for +12% bonus science while the plume is active!"
+    },
+    {
+      "speaker": "okafor",
+      "recommendedOptionId": "hold_nominal",
+      "quote": "Flight Engineer priority: hold our nominal attitude and preserve propellant and battery margins."
+    },
+    {
+      "speaker": "echo",
+      "recommendedOptionId": "priority_downlink",
+      "quote": "Comms & Resources priority: book an emergency high-rate DSN pass ($2M) so our existing buffer is safe first."
+    },
+    {
+      "speaker": "hale",
+      "recommendedOptionId": "split_window",
+      "quote": "Commander compromise: capture a short 2-hour target-of-opportunity scan (+6% science) without draining the battery."
+    }
+  ],
+  "neg_bandwidth_clash": [
+    {
+      "speaker": "ferreira",
+      "recommendedOptionId": "raw_science_stream",
+      "quote": "Science Specialist priority: dedicate 80% of downlink bandwidth to uncompressed science frames (+8% science)."
+    },
+    {
+      "speaker": "kenji",
+      "recommendedOptionId": "engineering_telemetry",
+      "quote": "Flight Engineer priority: keep continuous engineering telemetry active to guard pointing and thermal stability (+5% pointing)."
+    },
+    {
+      "speaker": "echo",
+      "recommendedOptionId": "compressed_burst",
+      "quote": "Comms & Resources priority: run onboard lossless packet compression for balanced science and telemetry at $0M extra cost."
+    }
+  ]
+}

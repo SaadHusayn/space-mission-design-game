@@ -1,0 +1,140 @@
+[
+  {
+    "id": "solar_storm",
+    "title": "Solar storm",
+    "icon": "☀️",
+    "window": "operations",
+    "kind": "anomaly",
+    "visualCue": "solar_storm",
+    "ownerRole": "engineer",
+    "chance": { "cadet": 0.5, "engineer": 0.7, "director": 0.9 },
+    "mitigatedBy": ["Battery capacity", "Radiation vault", "Storm shelter"]
+  },
+  {
+    "id": "micrometeoroid",
+    "title": "Micrometeoroid hit",
+    "icon": "💥",
+    "window": "cruise",
+    "kind": "anomaly",
+    "visualCue": "micrometeoroid",
+    "ownerRole": "engineer",
+    "chance": { "cadet": 0.2, "engineer": 0.35, "director": 0.5 },
+    "mitigatedBy": ["Power margin", "Propulsion Δv margin"]
+  },
+  {
+    "id": "wheel_failure",
+    "title": "Reaction wheel failure",
+    "icon": "⚙️",
+    "window": "operations",
+    "kind": "anomaly",
+    "visualCue": "alarm",
+    "ownerRole": "engineer",
+    "chance": { "cadet": 0.15, "engineer": 0.3, "director": 0.45 },
+    "mitigatedBy": ["Redundant precision ADCS"]
+  },
+  {
+    "id": "ground_outage",
+    "title": "Ground station outage",
+    "icon": "📡",
+    "window": "operations",
+    "kind": "anomaly",
+    "visualCue": "comms_cut",
+    "ownerRole": "comms",
+    "chance": { "cadet": 0.3, "engineer": 0.4, "director": 0.5 },
+    "mitigatedBy": ["Onboard computer storage", "High-rate antenna"]
+  },
+  {
+    "id": "conjunction",
+    "title": "Solar conjunction",
+    "icon": "🌗",
+    "window": "operations",
+    "kind": "anomaly",
+    "visualCue": "comms_cut",
+    "ownerRole": "comms",
+    "chance": { "cadet": 0.4, "engineer": 0.6, "director": 0.8 },
+    "mitigatedBy": ["Autonomous flight computer"]
+  },
+  {
+    "id": "radiation_upset",
+    "title": "Radiation upset",
+    "icon": "🧠",
+    "window": "operations",
+    "kind": "anomaly",
+    "visualCue": "alarm",
+    "ownerRole": "comms",
+    "chance": { "cadet": 0.3, "engineer": 0.5, "director": 0.7 },
+    "mitigatedBy": ["Radiation-hardened computer", "Radiation vault"]
+  },
+  {
+    "id": "crew_illness",
+    "title": "Crew health warning",
+    "icon": "🤒",
+    "window": "cruise",
+    "kind": "anomaly",
+    "visualCue": "alarm",
+    "ownerRole": "commander",
+    "chance": { "cadet": 0.2, "engineer": 0.35, "director": 0.5 },
+    "mitigatedBy": ["Spin habitat artificial gravity", "Exercise bay & life support"]
+  },
+  {
+    "id": "bonus_discovery",
+    "title": "Bonus discovery",
+    "icon": "🌟",
+    "window": "operations",
+    "kind": "anomaly",
+    "visualCue": "celebration",
+    "ownerRole": "science",
+    "chance": { "cadet": 0.4, "engineer": 0.35, "director": 0.3 },
+    "mitigatedBy": ["High science payload", "Budget & lifetime margin"]
+  },
+  {
+    "id": "launch_weather",
+    "title": "Weather at the launch site",
+    "icon": "🌦",
+    "window": "launch",
+    "kind": "anomaly",
+    "visualCue": "alarm",
+    "ownerRole": "commander",
+    "chance": { "cadet": 0.3, "engineer": 0.4, "director": 0.6 },
+    "mitigatedBy": ["High-G spacecraft bus (≥ 6 g)"]
+  },
+  {
+    "id": "neg_budget_cut",
+    "title": "Agency Reserve Squeeze (−10% Contingency)",
+    "icon": "⚖️",
+    "window": "cruise",
+    "kind": "negotiation",
+    "visualCue": "alarm",
+    "ownerRole": "commander",
+    "chance": { "cadet": 0.0, "engineer": 0.0, "director": 0.0 },
+    "mitigatedBy": ["Healthy budget margin", "High-rate comms", "Power margin"],
+    "timerSeconds": 45,
+    "commanderDefaultOptionId": "balanced_trim"
+  },
+  {
+    "id": "neg_bonus_target",
+    "title": "Transient Phenomenon Priority Clash",
+    "icon": "🔭",
+    "window": "operations",
+    "kind": "negotiation",
+    "visualCue": "celebration",
+    "ownerRole": "science",
+    "chance": { "cadet": 0.0, "engineer": 0.0, "director": 0.0 },
+    "mitigatedBy": ["Battery capacity", "Precision ADCS", "Onboard storage"],
+    "timerSeconds": 45,
+    "commanderDefaultOptionId": "split_window"
+  },
+  {
+    "id": "neg_bandwidth_clash",
+    "title": "Deep-Space Telemetry Bandwidth Allocation",
+    "icon": "📶",
+    "window": "operations",
+    "kind": "negotiation",
+    "visualCue": "comms_cut",
+    "ownerRole": "comms",
+    "chance": { "cadet": 0.0, "engineer": 0.0, "director": 0.0 },
+    "mitigatedBy": ["Ka-band / optical antenna", "Autonomous computer"],
+    "timerSeconds": 45,
+    "commanderDefaultOptionId": "compressed_burst"
+  }
+]
