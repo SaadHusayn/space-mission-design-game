@@ -60,7 +60,25 @@ class SoundEngine {
         this.musicGain = this.ctx.createGain();
         this.sfxGain = this.ctx.createGain();
 
+        // Subtle orbital echo bus for atmospheric depth
+        const echoDelay = this.ctx.createDelay(1.0);
+        echoDelay.delayTime.value = 0.34;
+        const echoFeedback = this.ctx.createGain();
+        echoFeedback.gain.value = 0.26;
+        const echoFilter = this.ctx.createBiquadFilter();
+        echoFilter.type = 'lowpass';
+        echoFilter.frequency.value = 1200;
+        const echoWet = this.ctx.createGain();
+        echoWet.gain.value = 0.22;
+
+        echoDelay.connect(echoFilter);
+        echoFilter.connect(echoFeedback);
+        echoFeedback.connect(echoDelay);
+        echoFilter.connect(echoWet);
+        echoWet.connect(this.masterGain);
+
         this.musicGain.connect(this.masterGain);
+        this.musicGain.connect(echoDelay);
         this.sfxGain.connect(this.masterGain);
         this.masterGain.connect(this.ctx.destination);
         this.applyVolumes();
@@ -164,6 +182,17 @@ class SoundEngine {
     filter.Q.value = 0.8;
 
     const now = ctx.currentTime;
+    // Gentle LFO breathing on the pad filter cutoff
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.type = 'sine';
+    lfo.frequency.value = mode === 'tension' ? 0.32 : 0.11;
+    lfoGain.gain.value = mode === 'tension' ? 160 : 120;
+    lfo.connect(lfoGain);
+    lfoGain.connect(filter.frequency);
+    lfo.start(now);
+    this.musicOscs.push(lfo);
+
     subGain.gain.setValueAtTime(0.0001, now);
     subGain.gain.exponentialRampToValueAtTime(0.45, now + 1.4);
 

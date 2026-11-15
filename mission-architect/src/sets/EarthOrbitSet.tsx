@@ -1,10 +1,11 @@
 'use client';
 
 import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import type { Group } from 'three';
 
-import { SUN_DIRECTION, TEXTURES } from '@/three/constants';
+import { MODELS, SUN_DIRECTION, TEXTURES } from '@/three/constants';
+import { GlbModel } from '@/three/GlbModel';
 import { Planet } from '@/three/Planet';
 import { ProbePlaceholder } from '@/three/ProbePlaceholder';
 import { Starfield } from '@/three/Starfield';
@@ -29,7 +30,14 @@ function OrbitingProbe({ speed }: { speed: number }) {
   return (
     <group rotation={[0.35, 0, 0.3]}>
       <group ref={orbit} rotation={[0, -2.0, 0]}>
-        <ProbePlaceholder position={[EARTH_RADIUS * 1.42, 0, 0]} rotation={[0.4, 0.6, 1.2]} scale={0.055} />
+        <Suspense fallback={<ProbePlaceholder position={[EARTH_RADIUS * 1.42, 0, 0]} rotation={[0.4, 0.6, 1.2]} scale={0.055} />}>
+          <GlbModel
+            url={MODELS.probeIss}
+            targetSize={0.55}
+            position={[EARTH_RADIUS * 1.42, 0, 0]}
+            rotation={[0.2, 0.6, 0.1]}
+          />
+        </Suspense>
       </group>
     </group>
   );

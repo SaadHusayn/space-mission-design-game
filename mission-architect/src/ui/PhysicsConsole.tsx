@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { soundEngine } from '@/audio/soundEngine';
 import type { Challenge, ChallengeResult } from '@/game/challenges/types';
 import type { Difficulty } from '@/game/types';
 
@@ -62,7 +63,10 @@ export function PhysicsConsole({ challenge, difficulty, onDone }: PhysicsConsole
               key={option.id}
               type="button"
               disabled={result !== null}
-              onClick={() => setResult(challenge.evaluate(option.id))}
+              onClick={() => {
+                soundEngine.playSfx('downlink');
+                setResult(challenge.evaluate(option.id));
+              }}
               className={`rounded-xl border px-4 py-3 text-left font-semibold text-ink transition focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default ${tone}`}
             >
               {reveal && option.correct ? '✓ ' : chosen && result?.correct === false ? '✗ ' : ''}

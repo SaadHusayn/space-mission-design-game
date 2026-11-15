@@ -91,8 +91,6 @@ export function AudioBridge() {
       } else if (phase === 'REPORT') {
         if (isSuccessReport) soundEngine.playSfx('fanfare');
         else soundEngine.playSfx('downlink');
-      } else if (prevPhase.current !== 'BOOT') {
-        soundEngine.playSfx('tick');
       }
       prevPhase.current = phase;
     }

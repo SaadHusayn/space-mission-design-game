@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
+import { soundEngine } from '@/audio/soundEngine';
 import {
   ASCENT_DURATION_S,
   CLEAN_IGNITION_WINDOW_S,
@@ -50,6 +51,28 @@ export function LaunchHud() {
 
   const ascent = useLaunch((s) => s.ascent);
   const timeScale = useLaunch((s) => s.timeScale);
+  const lastCountdownSec = useRef<number | null>(null);
+  const lastStage = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!ascent) return;
+    if (ascent.t < 0) {
+      const sec = Math.ceil(ascent.t);
+      if (sec >= -3 && sec <= -1 && sec !== lastCountdownSec.current) {
+        lastCountdownSec.current = sec;
+        soundEngine.playSfx('countdown');
+      }
+    } else if (lastCountdownSec.current !== 0) {
+      lastCountdownSec.current = 0;
+      soundEngine.playSfx('countdownFinal');
+    }
+    if (ascent.stage !== lastStage.current) {
+      if (ascent.stage === 'stage2' || ascent.stage === 'fairing_sep') {
+        soundEngine.playSfx('stageSep');
+      }
+      lastStage.current = ascent.stage;
+    }
+  }, [ascent]);
 
   const { mission, vehicle, summary, challenge } = useMemo(() => {
     if (!missionState || !design) {

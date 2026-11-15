@@ -135,7 +135,7 @@ These were not specified by the team. Each one can be changed.
 | D22 | **3D sets, figures, parts and rockets are built from code-generated shapes**, as good as possible. ✅ Confirmed by the team; Blender GLBs may replace them later (keep `part_*` / `socket_*` conventions) | No artist models | `src/sets/` |
 | D23 | **Cutscenes are always skippable**; camera moves use the project's own timeline maths, not GSAP | Repeat players and testers; one less dependency | `src/cutscenes/` |
 | D24 | **Hot-seat crew setup on one shared screen**; pass-the-device screens come with voting in P08 | Simpler first version | `src/ui/CrewSetup.tsx` |
-| D25 | **Pushing to GitHub skipped for now** (team's choice). Commits are local only | No `gh` CLI or stored GitHub login | — |
+| D25 | **Feature branches are committed and pushed to `origin`** (`phase/*`); `main` merges remain user-approved | Git remote configured and active | — |
 | D26 | **Browser tests use Playwright** with the installed Google Chrome (team rule) | Team request | `trajectory/playwright.config.ts`, `tests/e2e/` |
 | D27 | Chapter unlock chain: LEO → Moon → Mars → Jupiter → both Beyond chapters; one star unlocks the next | Plan order | `src/game/core/progress.ts` |
 | D28 | `?unlock=all` opens every chapter; `?debug` shows FPS and exposes `window.__game3d` | Testing and demos | `scenes/PathwayMap/mapStore.ts`, `components/GameRoot.tsx` |

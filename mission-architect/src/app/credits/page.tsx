@@ -21,6 +21,13 @@ const ASSETS = [
     note: "Generated in code (scripts/build-placeholder-models.mjs).",
   },
   {
+    name: "3D Rockets, Celestial Bodies & Spacecraft (.glb)",
+    author: "NASA 3D Resources / Space Universe Collection",
+    licence: "NASA media usage policy",
+    href: "https://github.com/nasa/NASA-3D-Resources",
+    note: "Atlas 6, Space Shuttle, Saturn V, Starship, Sun, Moon (LRO), Mars, Kepler-186f, ISS, LRO, MRO, Juno, Voyager, JWST, DSN 70m dish.",
+  },
+  {
     name: "Procedural ambient music & mission SFX",
     author: "Mission Architect team",
     licence: "Original work",

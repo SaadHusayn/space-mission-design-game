@@ -89,8 +89,15 @@ function SceneReady() {
 function HudLayer() {
   const phase = useGame((state) => state.phase);
   const reducedMotion = useGame((state) => state.settings.reducedMotion);
-  return (
-    <div className="pointer-events-none absolute inset-0 z-10" data-reduced-motion={reducedMotion}>
+  const needsTopClearance =
+    phase !== 'BOOT' &&
+    phase !== 'TITLE' &&
+    phase !== 'PROLOGUE' &&
+    phase !== 'BRIEFING' &&
+    phase !== 'ROLLOUT';
+
+  const activeHud = (
+    <>
       {phase === 'TITLE' && <TitleMenu />}
       {phase === 'PROLOGUE' && <PrologueHud />}
       {phase === 'CHAPTER_SELECT' && <PathwayHud />}
@@ -122,6 +129,16 @@ function HudLayer() {
         'OPERATIONS',
         'REPORT',
       ].includes(phase) && <PreviewHud />}
+    </>
+  );
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10" data-reduced-motion={reducedMotion}>
+      {needsTopClearance ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 top-12">{activeHud}</div>
+      ) : (
+        activeHud
+      )}
       <UtilityBar />
       <SettingsDialog />
       <PauseMenu />

@@ -9,7 +9,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BASE =
-  'rounded-full border px-7 py-3 text-base font-bold tracking-[0.16em] transition ' +
+  'cursor-pointer whitespace-nowrap rounded-full border px-5 py-2.5 text-sm font-bold tracking-[0.14em] transition ' +
+  'active:scale-[0.98] sm:px-7 sm:py-3 sm:text-base sm:tracking-[0.16em] ' +
   'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ' +
   'disabled:cursor-not-allowed disabled:opacity-50';
 

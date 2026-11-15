@@ -17,6 +17,7 @@ Every external asset must be listed here **before** it is committed.
 | File | Source | Licence |
 |---|---|---|
 | `public/models/probe_placeholder.glb` | Generated in code by `scripts/build-placeholder-models.mjs` (Mission Architect team) | Original work |
+| `public/models/rocket_*.glb` (`Atlas 6`, `Space Shuttle`, `Saturn V`, `Starship`), `sun.glb`, `moon.glb`, `mars.glb`, `exoplanet.glb`, `probe_iss.glb`, `probe_lro.glb`, `probe_mro.glb`, `probe_juno.glb`, `probe_voyager.glb`, `probe_jwst.glb`, `dsn_dish.glb` | [NASA 3D Resources](https://github.com/nasa/NASA-3D-Resources) via local `Space_Universe_Collection` | NASA media usage policy (non-commercial educational use; no NASA endorsement implied) |
 
 ## Audio
 

@@ -2,14 +2,15 @@
 
 import { Html, Line, OrbitControls } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { Suspense, useLayoutEffect, useMemo, useRef } from 'react';
 import { AdditiveBlending, DoubleSide, type Group, QuadraticBezierCurve3, Vector3 } from 'three';
 
 import { emptyDesign, getEventCatalogueEntry, liveTelemetry } from '@/game';
 import type { Design, PathwayId } from '@/game/types';
 import { useGame } from '@/hooks/useGame';
 import { AlarmLight } from '@/three/AlarmLight';
-import { SUN_DIRECTION, TEXTURES } from '@/three/constants';
+import { MODELS, SUN_DIRECTION, TEXTURES } from '@/three/constants';
+import { GlbModel } from '@/three/GlbModel';
 import { Heliosphere } from '@/three/Heliosphere';
 import { ImpactBurst } from '@/three/ImpactBurst';
 import { Planet } from '@/three/Planet';
@@ -713,10 +714,23 @@ function ExoplanetArtistImpressionView({ reducedMotion }: { reducedMotion: boole
           const angle = idx * 0.92;
           return (
             <group key={p.name} position={[Math.cos(angle) * p.r, 0, Math.sin(angle) * p.r]}>
-              <mesh>
-                <sphereGeometry args={[p.size, 24, 24]} />
-                <meshStandardMaterial color={p.color} roughness={0.6} metalness={0.1} />
-              </mesh>
+              {p.hz ? (
+                <Suspense
+                  fallback={
+                    <mesh>
+                      <sphereGeometry args={[p.size, 24, 24]} />
+                      <meshStandardMaterial color={p.color} roughness={0.6} metalness={0.1} />
+                    </mesh>
+                  }
+                >
+                  <GlbModel url={MODELS.exoplanet} targetSize={p.size * 2.2} spin={0.15} />
+                </Suspense>
+              ) : (
+                <mesh>
+                  <sphereGeometry args={[p.size, 24, 24]} />
+                  <meshStandardMaterial color={p.color} roughness={0.6} metalness={0.1} />
+                </mesh>
+              )}
               <Html position={[0, p.size + 0.2, 0]} center zIndexRange={[4, 0]}>
                 <span
                   className={`pointer-events-none whitespace-nowrap rounded px-1.5 py-0.5 font-mono text-[10px] ${

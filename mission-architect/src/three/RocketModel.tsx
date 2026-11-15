@@ -1,12 +1,22 @@
 'use client';
 
 import type { ThreeEvent } from '@react-three/fiber';
+import { Suspense } from 'react';
 import { AdditiveBlending, DoubleSide } from 'three';
 
 import { vehicleHeightM } from '@/game';
 import type { Design, LaunchVehicle } from '@/game/types';
 
+import { MODELS } from './constants';
+import { GlbModel } from './GlbModel';
 import { Spacecraft } from './Spacecraft';
+
+const ROCKET_GLBS: Record<string, string> = {
+  lv_small: MODELS.rocketSmall,
+  lv_medium: MODELS.rocketMedium,
+  lv_heavy: MODELS.rocketHeavy,
+  lv_superheavy: MODELS.rocketSuperheavy,
+};
 
 export interface RocketModelProps {
   vehicle: LaunchVehicle;
@@ -104,6 +114,43 @@ export function RocketModel({
           <meshBasicMaterial color={accentColor} toneMapped={false} transparent opacity={selected ? 0.95 : 0.45} side={DoubleSide} />
         </mesh>
       )}
+
+      {/* Real NASA .glb launch vehicle when intact (Pad lineup & Stage 1 ascent) */}
+      {stage1SepElapsedS === 0 && fairingSepElapsedS === 0 && ROCKET_GLBS[vehicle.id] ? (
+        <group>
+          <Suspense fallback={null}>
+            <GlbModel
+              url={ROCKET_GLBS[vehicle.id]}
+              targetSize={totalH}
+              fit="height"
+              anchor="bottom"
+              position={[0, 0.25, 0]}
+            />
+          </Suspense>
+          {stage1Firing && (
+            <group position={[0, -0.1, 0]} scale={[1, Math.max(0.45, throttle), 1]}>
+              <mesh position={[0, -2.4, 0]} rotation={[Math.PI, 0, 0]}>
+                <coneGeometry args={[radius * (hasSideBoosters ? 2.1 : 1.25), 5.2, 24, 1, true]} />
+                <meshBasicMaterial
+                  color="#ffb547"
+                  transparent
+                  opacity={0.78}
+                  blending={AdditiveBlending}
+                  depthWrite={false}
+                  side={DoubleSide}
+                  toneMapped={false}
+                />
+              </mesh>
+              <mesh position={[0, -1.3, 0]} rotation={[Math.PI, 0, 0]}>
+                <coneGeometry args={[radius * (hasSideBoosters ? 1.2 : 0.72), 2.8, 20]} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.92} blending={AdditiveBlending} depthWrite={false} toneMapped={false} />
+              </mesh>
+              <pointLight position={[0, -1.8, 0]} color="#ff9d2e" intensity={18 * throttle} distance={32} />
+            </group>
+          )}
+        </group>
+      ) : (
+        <>
 
       {/* STAGE 1 (Drops away after MECO / Stage Sep) */}
       <group name="part_stage1" position={[0, s1DropY, 0]} rotation={[0, 0, s1TiltZ]}>
@@ -262,6 +309,8 @@ export function RocketModel({
           );
         })}
       </group>
+        </>
+      )}
     </group>
   );
 }

@@ -2,10 +2,11 @@
 
 import { useTexture } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { Suspense, useMemo, useRef } from 'react';
 import { AdditiveBlending, CanvasTexture, SRGBColorSpace, type Mesh } from 'three';
 
-import { TEXTURES } from './constants';
+import { MODELS, TEXTURES } from './constants';
+import { GlbModel } from './GlbModel';
 
 /** Soft round glow texture drawn once on a canvas. */
 function useGlowTexture(inner: string, outer: string) {
@@ -49,12 +50,18 @@ export function Sun({ radius = 2, light = true }: { radius?: number; light?: boo
   useFrame((_, delta) => {
     if (surface.current) surface.current.rotation.y += delta * 0.03;
   });
+  const fallbackSphere = (
+    <mesh ref={surface}>
+      <sphereGeometry args={[radius, 64, 64]} />
+      <meshBasicMaterial map={map} color={[1.6, 1.35, 1.1]} toneMapped={false} />
+    </mesh>
+  );
+
   return (
     <group>
-      <mesh ref={surface}>
-        <sphereGeometry args={[radius, 64, 64]} />
-        <meshBasicMaterial map={map} color={[1.6, 1.35, 1.1]} toneMapped={false} />
-      </mesh>
+      <Suspense fallback={fallbackSphere}>
+        <GlbModel url={MODELS.sun} targetSize={radius * 2} spin={0.03} />
+      </Suspense>
       <Glow size={radius * 6} />
       {light && <pointLight intensity={2.5} distance={0} decay={0} color="#fff3e0" />}
     </group>

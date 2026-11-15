@@ -18,4 +18,19 @@ export const TEXTURES = {
 
 export const MODELS = {
   probePlaceholder: '/models/probe_placeholder.glb',
+  rocketSmall: '/models/rocket_small.glb',
+  rocketMedium: '/models/rocket_medium.glb',
+  rocketHeavy: '/models/rocket_heavy.glb',
+  rocketSuperheavy: '/models/rocket_superheavy.glb',
+  sun: '/models/sun.glb',
+  moon: '/models/moon.glb',
+  mars: '/models/mars.glb',
+  exoplanet: '/models/exoplanet.glb',
+  probeIss: '/models/probe_iss.glb',
+  probeLro: '/models/probe_lro.glb',
+  probeMro: '/models/probe_mro.glb',
+  probeJuno: '/models/probe_juno.glb',
+  probeVoyager: '/models/probe_voyager.glb',
+  probeJwst: '/models/probe_jwst.glb',
+  dsnDish: '/models/dsn_dish.glb',
 } as const;
