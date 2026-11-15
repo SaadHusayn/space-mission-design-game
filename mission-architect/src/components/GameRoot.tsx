@@ -18,6 +18,7 @@ import { PathwayMapScene } from '@/scenes/PathwayMap/PathwayMapScene';
 import { ModelPreviewScene } from '@/scenes/ModelPreview/ModelPreviewScene';
 import { PrologueHud } from '@/scenes/Prologue/PrologueHud';
 import { PrologueScene } from '@/scenes/Prologue/PrologueScene';
+import { ReportScene } from '@/scenes/Report/ReportScene';
 import { TitleScene } from '@/scenes/Title/TitleScene';
 import { AssemblyHud } from '@/ui/AssemblyHud';
 import { GoNoGoPanel } from '@/ui/GoNoGoPanel';
@@ -25,6 +26,7 @@ import { JourneyHud } from '@/ui/JourneyHud';
 import { LaunchHud } from '@/ui/LaunchHud';
 import { Loader } from '@/ui/Loader';
 import { PreviewHud } from '@/ui/PreviewHud';
+import { ReportHud } from '@/ui/Report/ReportHud';
 import { ReviewBoard } from '@/ui/ReviewBoard';
 import { RocketSelectHud } from '@/ui/RocketSelectHud';
 import { SettingsDialog } from '@/ui/SettingsDialog';
@@ -65,7 +67,7 @@ function SceneSwitch() {
   if (phase === 'ROLLOUT') return <RolloutCutscene />;
   if (phase === 'LAUNCH') return <LaunchScene />;
   if (phase === 'JOURNEY' || phase === 'OPERATIONS') return <JourneyScene />;
-  // Later phases get their own scenes as they are built.
+  if (phase === 'REPORT') return <ReportScene />;
   return <ModelPreviewScene />;
 }
 
@@ -96,6 +98,7 @@ function HudLayer() {
       {phase === 'GO_NO_GO' && <GoNoGoPanel />}
       {phase === 'LAUNCH' && <LaunchHud />}
       {(phase === 'JOURNEY' || phase === 'OPERATIONS') && <JourneyHud />}
+      {phase === 'REPORT' && <ReportHud />}
       {![
         'BOOT',
         'TITLE',
@@ -112,6 +115,7 @@ function HudLayer() {
         'LAUNCH',
         'JOURNEY',
         'OPERATIONS',
+        'REPORT',
       ].includes(phase) && <PreviewHud />}
       <SettingsDialog />
     </div>

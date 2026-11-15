@@ -80,8 +80,60 @@ export {
   type VoteSession,
   type CollaborationMetrics,
 } from './core/votes';
-export { scoreMission, marginScore, type MissionScore, type MissionOutcome, type RequirementResult, type ScoreComponent } from './sim/scoring';
-export { explainMission, type WhyBullet } from './sim/why';
+export {
+  scoreMission,
+  marginScore,
+  computeDecisionsScore,
+  buildScoreExtras,
+  buildErbVsReality,
+  buildPhysicsRecap,
+  buildCrewAwards,
+  type MissionScore,
+  type MissionOutcome,
+  type ScoreGrade,
+  type RequirementResult,
+  type ScoreComponent,
+  type ErbVsRealityRow,
+  type PhysicsRecapItem,
+  type CrewAward,
+} from './sim/scoring';
+export {
+  explainMission,
+  decisionToTargetSlot,
+  anotherWayToWin,
+  realMissionsForPathway,
+  type WhyBullet,
+  type WhyTargetSlot,
+  type ExplainMissionOptions,
+  type AnotherWayHint,
+  type RealMissionFact,
+} from './sim/why';
+export {
+  compareRuns,
+  createSavedRunSnapshot,
+  type RunComparison,
+  type ComponentComparisonRow,
+  type MetricComparisonRow,
+  type DesignDiffRow,
+} from './sim/compare';
+export {
+  SAVED_DESIGNS_KEY,
+  SAVED_RUNS_KEY,
+  computeDesignHash,
+  sanitiseDesign,
+  loadSavedDesigns,
+  saveDesignToStorage,
+  deleteSavedDesign,
+  loadSavedRuns,
+  recordRunToStorage,
+  getChapterLeaderboard,
+  exportDesignBundle,
+  importDesignBundle,
+  type SavedDesignEntry,
+  type SavedRunEntry,
+  type ExportedDesignBundle,
+  type SimpleStorage,
+} from './core/save';
 export { duration, fmt, gbPerDay, kg, kms, money, ms, round, watts, years } from './sim/format';
 export { WINNING_DESIGNS, makeDesign, type DesignFixture } from './sim/fixtures/designs';
 export { challengesFor, generateChallenge, physicsMastery, PATHWAY_CHALLENGES } from './challenges/generator';
