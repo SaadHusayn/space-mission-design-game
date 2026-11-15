@@ -3,6 +3,17 @@ import type { StateStorage } from 'zustand/middleware';
 
 import { SETTINGS_STORAGE_KEY, createGameStore } from './store';
 
+const DEFAULT_SETTINGS = {
+  quality: 'high',
+  reducedMotion: false,
+  musicVolume: 0.45,
+  sfxVolume: 0.7,
+  muted: false,
+  largeText: false,
+  subtitles: true,
+  highContrast: false,
+} as const;
+
 function memoryStorage(initial: Record<string, string> = {}): StateStorage & { data: Record<string, string> } {
   const data = { ...initial };
   return {
@@ -21,7 +32,7 @@ describe('game store', () => {
   it('starts at BOOT with default settings', () => {
     const store = createGameStore();
     expect(store.getState().phase).toBe('BOOT');
-    expect(store.getState().settings).toEqual({ quality: 'high', reducedMotion: false });
+    expect(store.getState().settings).toEqual(DEFAULT_SETTINGS);
     expect(store.getState().settingsOpen).toBe(false);
   });
 
@@ -44,7 +55,7 @@ describe('game store', () => {
   it('updates settings without touching the other ones', () => {
     const store = createGameStore();
     store.getState().setSetting('quality', 'low');
-    expect(store.getState().settings).toEqual({ quality: 'low', reducedMotion: false });
+    expect(store.getState().settings).toEqual({ ...DEFAULT_SETTINGS, quality: 'low' });
     store.getState().setSettingsOpen(true);
     expect(store.getState().settingsOpen).toBe(true);
   });
@@ -56,7 +67,7 @@ describe('game store', () => {
     store.getState().setSetting('quality', 'low');
     const saved = JSON.parse(storage.data[SETTINGS_STORAGE_KEY]);
     expect(Object.keys(saved.state).sort()).toEqual(['profile', 'settings']);
-    expect(saved.state.settings).toEqual({ quality: 'low', reducedMotion: false });
+    expect(saved.state.settings).toEqual({ ...DEFAULT_SETTINGS, quality: 'low' });
   });
 
   it('restores saved settings but always restarts at BOOT', () => {
@@ -67,7 +78,7 @@ describe('game store', () => {
       }),
     });
     const store = createGameStore({ storage });
-    expect(store.getState().settings).toEqual({ quality: 'low', reducedMotion: true });
+    expect(store.getState().settings).toEqual({ ...DEFAULT_SETTINGS, quality: 'low', reducedMotion: true });
     expect(store.getState().phase).toBe('BOOT');
   });
 
@@ -76,7 +87,7 @@ describe('game store', () => {
       [SETTINGS_STORAGE_KEY]: JSON.stringify({ state: { settings: { quality: 'low' } }, version: 1 }),
     });
     const store = createGameStore({ storage, prefersReducedMotion: true });
-    expect(store.getState().settings).toEqual({ quality: 'low', reducedMotion: true });
+    expect(store.getState().settings).toEqual({ ...DEFAULT_SETTINGS, quality: 'low', reducedMotion: true });
   });
 });
 
@@ -94,7 +105,7 @@ describe('save migration after the rename', () => {
       },
     };
     const store = createGameStore({ storage });
-    expect(store.getState().settings).toEqual({ quality: 'low', reducedMotion: true });
+    expect(store.getState().settings).toEqual({ ...DEFAULT_SETTINGS, quality: 'low', reducedMotion: true });
     expect(data[LEGACY_STORAGE_KEYS[0]]).toBeUndefined();
     expect(data[SETTINGS_STORAGE_KEY]).toBeDefined();
     data[LEGACY_STORAGE_KEYS[0]] = 'stale';

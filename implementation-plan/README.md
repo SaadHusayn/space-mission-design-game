@@ -42,7 +42,7 @@
 | **P11** | [Online multiplayer (optional)](phase-11-online-multiplayer-optional.md) | Up to 4 players on separate devices | N10 | P08 |
 
 **Milestone "Playable"** = P01–P07 + simple report (part of P09). The full challenge loop works.
-**Milestone "Submission"** = P01–P10. P11 only if time allows.
+**Milestone "Submission"** = P01–P10 ✅ implemented (manual team playtest/Vercel deploy/video submission pending). P11 optional.
 
 ## Definition of Done (every phase)
 

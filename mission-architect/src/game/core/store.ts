@@ -62,6 +62,18 @@ export interface Settings {
   quality: Quality;
   /** Stops camera drift and other non-essential motion. */
   reducedMotion: boolean;
+  /** Music bus volume (0 to 1). */
+  musicVolume: number;
+  /** Sound effects bus volume (0 to 1). */
+  sfxVolume: number;
+  /** Master mute toggle. */
+  muted: boolean;
+  /** Increases base UI font scale for improved legibility. */
+  largeText: boolean;
+  /** Displays dialogue captions and audio cue indicators. */
+  subtitles: boolean;
+  /** Increases panel opacity and border contrast. */
+  highContrast: boolean;
 }
 
 /** Everything about the player's astronaut class that is kept between visits. */
@@ -122,6 +134,8 @@ export interface GameState {
   phase: Phase;
   settings: Settings;
   settingsOpen: boolean;
+  pauseOpen: boolean;
+  notebookOpen: boolean;
   profile: Profile;
   prologueStep: PrologueStep;
   mission: CurrentMission | null;
@@ -156,6 +170,8 @@ export interface GameState {
   goTo: (phase: Phase) => boolean;
   setSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
   setSettingsOpen: (open: boolean) => void;
+  setPauseOpen: (open: boolean) => void;
+  setNotebookOpen: (open: boolean) => void;
 
   /** Applies one design change (equip/unequip/bus/instrument/option). False when nothing changed. */
   editDesign: (change: DesignChange, voteSummary?: DecisionLogEntry['voteSummary']) => boolean;
@@ -449,8 +465,19 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     get: StoreApi<GameState>['getState'],
   ): GameState => ({
     phase: 'BOOT',
-    settings: { quality: 'high', reducedMotion: prefersReducedMotion },
+    settings: {
+      quality: 'high',
+      reducedMotion: prefersReducedMotion,
+      musicVolume: 0.45,
+      sfxVolume: 0.7,
+      muted: false,
+      largeText: false,
+      subtitles: true,
+      highContrast: false,
+    },
     settingsOpen: false,
+    pauseOpen: false,
+    notebookOpen: false,
     profile: defaultProfile(),
     prologueStep: 'intro',
     mission: null,
@@ -476,6 +503,8 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     },
     setSetting: (key, value) => set((state) => ({ settings: { ...state.settings, [key]: value } })),
     setSettingsOpen: (open) => set({ settingsOpen: open }),
+    setPauseOpen: (open) => set({ pauseOpen: open }),
+    setNotebookOpen: (open) => set({ notebookOpen: open }),
 
     editDesign: (change, voteSummary) => {
       const state = get();

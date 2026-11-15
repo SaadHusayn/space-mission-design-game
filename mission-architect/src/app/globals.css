@@ -41,6 +41,16 @@ body {
   animation: none;
 }
 
+[data-high-contrast="true"] {
+  --color-panel: rgb(4 10 24 / 0.96);
+  --color-line: rgb(140 220 255 / 0.58);
+  --color-muted: #b8cde8;
+}
+
+[data-large-text="true"] {
+  font-size: 112.5%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hud-enter {
     animation: none;

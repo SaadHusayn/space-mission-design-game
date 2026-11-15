@@ -20,7 +20,23 @@ const ASSETS = [
     href: null,
     note: "Generated in code (scripts/build-placeholder-models.mjs).",
   },
+  {
+    name: "Procedural ambient music & mission SFX",
+    author: "Mission Architect team",
+    licence: "Original work",
+    href: null,
+    note: "Synthesized locally via Web Audio API (src/audio/soundEngine.ts).",
+  },
 ];
+
+const REAL_MISSIONS = [
+  ["ISS & CubeSats (LEO)", "Low-Earth-orbit technology demonstration, Earth observation, and microgravity research."],
+  ["Artemis & Lunar Reconnaissance Orbiter (Moon)", "Cislunar transfer orbits, polar water-ice mapping, and lunar communications."],
+  ["Mars Reconnaissance Orbiter & Perseverance (Mars)", "Hohmann transfers (~259 days), atmospheric entry/landing, and high-gain deep-space downlink."],
+  ["Galileo, Juno & Europa Clipper (Jupiter)", "Radiation-hardened electronics, low-solar-flux RTG power (~3.7% of 1 AU), and gravity assists."],
+  ["Voyager 1 & 2 (Interstellar)", "Jupiter/Saturn gravity-assist slingshots, RTG longevity, and heliopause plasma science."],
+  ["Kepler & JWST (Exoplanet Telescope)", "Sun-Earth L2 thermal stability and transit photometry (detecting ppm-level starlight dips)."],
+] as const;
 
 const RESOURCES = [
   ["Design and Develop Science Missions (NASA)", "https://www.nasa.gov/wp-content/uploads/2025/04/250323-design-and-develop-science-mission.pdf?emrc=a454cf"],
@@ -75,6 +91,19 @@ export default function CreditsPage() {
             <a href={href} className="text-accent underline-offset-4 hover:underline" rel="noreferrer" target="_blank">
               {label}
             </a>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="mt-10 text-2xl font-bold">Real missions referenced</h2>
+      <p className="mt-2 text-sm text-muted">
+        Each pathway in Mission Architect is inspired by real-world spaceflight engineering.
+      </p>
+      <ul className="mt-4 space-y-2">
+        {REAL_MISSIONS.map(([title, desc]) => (
+          <li key={title} className="rounded-xl border border-line bg-panel p-3 text-sm">
+            <span className="font-semibold text-ink">{title}:</span>{' '}
+            <span className="text-muted">{desc}</span>
           </li>
         ))}
       </ul>

@@ -1,4 +1,8 @@
-import type { ButtonHTMLAttributes } from 'react';
+'use client';
+
+import type { ButtonHTMLAttributes, MouseEvent } from 'react';
+
+import { soundEngine } from '@/audio/soundEngine';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary';
@@ -14,6 +18,10 @@ const VARIANTS = {
   secondary: 'border-line bg-panel text-muted hover:border-accent hover:text-ink',
 };
 
-export function Button({ variant = 'primary', className = '', type = 'button', ...props }: ButtonProps) {
-  return <button type={type} className={`${BASE} ${VARIANTS[variant]} ${className}`} {...props} />;
+export function Button({ variant = 'primary', className = '', type = 'button', onClick, ...props }: ButtonProps) {
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    soundEngine.playSfx('tick');
+    onClick?.(event);
+  };
+  return <button type={type} className={`${BASE} ${VARIANTS[variant]} ${className}`} onClick={handleClick} {...props} />;
 }
