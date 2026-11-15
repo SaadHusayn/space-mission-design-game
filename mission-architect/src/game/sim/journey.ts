@@ -873,3 +873,30 @@ export function applyChallengeToJourney(
 
   return { journey: state, flybyRadii };
 }
+
+/** Builds the live EventContext for the current day of a journey. */
+export function journeyEventContext(state: JourneyState, data: GameData = gameData): EventContext {
+  const summary = summaryOf(state, data);
+  return eventContext(state, summary);
+}
+
+/** Queues a specific event or negotiation dilemma as pending on the current journey day. */
+export function triggerJourneyEvent(
+  previous: JourneyState,
+  eventId: string,
+  data: GameData = gameData,
+): JourneyState {
+  if (previous.ended || previous.pending) return previous;
+  const state = structuredClone(previous);
+  const summary = summaryOf(state, data);
+  const event = getEvent(eventId);
+  const ctx = eventContext(state, summary);
+  state.pending = {
+    eventId: event.id,
+    day: state.day,
+    title: event.title,
+    description: event.describe(ctx),
+    options: event.options(ctx),
+  };
+  return state;
+}

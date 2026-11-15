@@ -16,6 +16,8 @@ export {
   journeyChallengeSchedule,
   nextJourneyMilestoneDay,
   applyChallengeToJourney,
+  journeyEventContext,
+  triggerJourneyEvent,
   type JourneyInput,
   type JourneyState,
   type PendingEvent,
@@ -26,7 +28,58 @@ export {
   type LiveTelemetry,
   type ScheduledChallenge,
 } from './sim/journey';
-export { EVENTS, getEvent, type EventDef } from './sim/events';
+export {
+  EVENTS,
+  NEGOTIATION_EVENTS,
+  EVENT_CATALOGUE,
+  ADVISOR_CATALOGUE,
+  getEvent,
+  getEventCatalogueEntry,
+  getNegotiationEvent,
+  evaluateEventMitigations,
+  advisorsForEvent,
+  type EventDef,
+  type EventOption,
+  type EventEffect,
+  type EventResolution,
+  type EventContext,
+  type EventWindow,
+  type EventVisualCue,
+  type EventCatalogueEntry,
+  type EventMitigationStatus,
+  type AdvisorOpinion,
+  type NegotiationDef,
+} from './sim/events';
+export {
+  SLOT_OWNER_ROLE,
+  ownerRoleForChange,
+  memberOwnsRole,
+  computeDecisionDeltas,
+  describeDesignChange,
+  requiresTeamVote,
+  createDesignProposal,
+  createEventProposal,
+  type Proposal,
+  type ProposalKind,
+  type ProposalReason,
+  type ProposalOption,
+} from './core/proposals';
+export {
+  REACTION_CHIPS,
+  startVoteSession,
+  setVoteHandoffMode,
+  acknowledgeHandoff,
+  castVote,
+  resolveCommanderTieBreak,
+  resolveNegotiationTimeout,
+  computeCollaborationMetrics,
+  type ReactionChip,
+  type MemberVote,
+  type VoteOutcome,
+  type VoteResolution,
+  type VoteSession,
+  type CollaborationMetrics,
+} from './core/votes';
 export { scoreMission, marginScore, type MissionScore, type MissionOutcome, type RequirementResult, type ScoreComponent } from './sim/scoring';
 export { explainMission, type WhyBullet } from './sim/why';
 export { duration, fmt, gbPerDay, kg, kms, money, ms, round, watts, years } from './sim/format';

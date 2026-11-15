@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   duration,
@@ -12,6 +12,7 @@ import {
   summarizeDesign,
   watts,
 } from '@/game';
+import { AVATAR_COLOURS, ROLES } from '@/game/core/crew';
 import { useGame } from '@/hooks/useGame';
 import {
   journeyViewStore,
@@ -21,7 +22,9 @@ import {
 } from '@/scenes/Journey/journeyViewStore';
 
 import { Button } from './Button';
+import { DecisionLog } from './DecisionLog';
 import { DistanceLadder } from './DistanceLadder';
+import { EventModal } from './EventModal';
 import { LightCurveChart } from './LightCurveChart';
 import { PhysicsConsole } from './PhysicsConsole';
 
@@ -37,13 +40,28 @@ const END_REASON_LABELS: Record<string, { title: string; tone: 'ok' | 'bad' }> =
 };
 
 export function JourneyHud() {
+  const [decisionLogOpen, setDecisionLogOpen] = useState(false);
+
   const journey = useGame((state) => state.journey);
+  const crew = useGame((state) => state.profile.crew);
   const difficulty = useGame((state) => state.profile.difficulty);
+  const decisionLog = useGame((state) => state.decisionLog);
+  const activeVote = useGame((state) => state.activeVote);
+  const lastEventResolution = useGame((state) => state.lastEventResolution);
   const completedChallengeIds = useGame((state) => state.completedChallengeIds);
+
   const beginJourney = useGame((state) => state.beginJourney);
   const stepJourney = useGame((state) => state.stepJourney);
   const stepToNextMilestone = useGame((state) => state.stepToNextMilestone);
   const chooseEventOption = useGame((state) => state.chooseEventOption);
+  const startEventVote = useGame((state) => state.startEventVote);
+  const startNegotiation = useGame((state) => state.startNegotiation);
+  const setVoteHandoff = useGame((state) => state.setVoteHandoff);
+  const acknowledgeVoteHandoff = useGame((state) => state.acknowledgeVoteHandoff);
+  const submitMemberVote = useGame((state) => state.submitMemberVote);
+  const breakVoteTie = useGame((state) => state.breakVoteTie);
+  const expireNegotiationTimer = useGame((state) => state.expireNegotiationTimer);
+  const dismissEventResolution = useGame((state) => state.dismissEventResolution);
   const completeJourneyChallenge = useGame((state) => state.completeJourneyChallenge);
   const finishJourney = useGame((state) => state.finishJourney);
 
@@ -149,13 +167,18 @@ export function JourneyHud() {
                   ⚠ SURVIVAL MODE (INSTRUMENTS OFF)
                 </span>
               )}
+              {journey.pending && (
+                <span className="rounded-full border border-warn/60 bg-warn/20 px-2.5 py-0.5 font-mono text-xs font-bold text-warn">
+                  ⚡ ACTIVE ALERT: {journey.pending.title.toUpperCase()}
+                </span>
+              )}
             </div>
             <h1 className="mt-0.5 text-lg font-bold text-ink sm:text-xl">
               Mission Flight &amp; Operations — {pathway.destination}
             </h1>
           </div>
 
-          {/* 3D Camera View Switcher */}
+          {/* 3D Camera View Switcher + Log & Dilemma Actions */}
           <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="3D Camera View">
             {viewOptions.map((opt) => (
               <button
@@ -172,6 +195,27 @@ export function JourneyHud() {
                 {opt.label}
               </button>
             ))}
+            {!journey.ended && !journey.pending && (
+              <button
+                type="button"
+                onClick={() => startNegotiation()}
+                className="rounded-xl border border-warn/50 bg-warn/15 px-3 py-1.5 font-mono text-xs font-semibold text-warn transition hover:bg-warn/25"
+              >
+                ⚖ Team Dilemma
+              </button>
+            )}
+            <button
+              type="button"
+              aria-expanded={decisionLogOpen}
+              onClick={() => setDecisionLogOpen((open) => !open)}
+              className={`rounded-xl border px-3 py-1.5 font-mono text-xs font-semibold transition ${
+                decisionLogOpen
+                  ? 'border-accent bg-accent/25 text-ink'
+                  : 'border-line bg-black/35 text-muted hover:border-accent/50 hover:text-ink'
+              }`}
+            >
+              📋 Log ({decisionLog.length})
+            </button>
           </div>
         </div>
 
@@ -229,9 +273,9 @@ export function JourneyHud() {
         </div>
       </header>
 
-      {/* Main Content Grid: Left Live Telemetry Dashboard + Right Scenarios/Checkpoints */}
+      {/* Main Content Grid: Left Live Telemetry Dashboard + Right Scenarios/Events/Checkpoints */}
       <div className="my-2 grid grid-cols-1 items-start gap-3 lg:grid-cols-12">
-        {/* Left Column: Live Mission Telemetry Dashboard (R10) */}
+        {/* Left Column: Live Mission Telemetry Dashboard (R10) + Mission Control Crew Status */}
         <aside
           className="pointer-events-auto space-y-2.5 rounded-2xl border border-line bg-panel/95 p-4 shadow-lg backdrop-blur lg:col-span-5"
           aria-label="Live Mission Dashboard"
@@ -364,6 +408,44 @@ export function JourneyHud() {
             </div>
           )}
 
+          {/* Crew Avatars Reacting Strip (Phase 08 §4) */}
+          <div
+            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-black/35 px-3 py-2 text-xs"
+            aria-label="Mission Crew Status"
+          >
+            <span className="font-mono text-[10px] uppercase text-muted">
+              {pathway.crewed ? 'Onboard Crew:' : 'Mission Control Desks:'}
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              {crew.map((member) => {
+                const roleCol = ROLES[member.roles[0] ?? 'commander'].colour;
+                const alert = Boolean(journey.pending || telemetry.survivalMode);
+                return (
+                  <span
+                    key={member.id}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[11px] font-semibold transition ${
+                      alert ? 'animate-pulse border-warn text-warn' : 'text-ink'
+                    }`}
+                    style={{
+                      borderColor: alert ? undefined : roleCol,
+                      backgroundColor: `${roleCol}18`,
+                    }}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: AVATAR_COLOURS[member.avatar % AVATAR_COLOURS.length] }}
+                    />
+                    {member.callSign || member.id.toUpperCase()}
+                    <span className="text-[10px] text-muted">
+                      ({member.roles.map((r) => ROLES[r].short).join('/')})
+                    </span>
+                    <span aria-hidden>{alert ? '⚡' : journey.ended && journey.endReason === 'complete' ? '🎉' : '🛰'}</span>
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Pathway-Specific Interactive Science Widgets */}
           {pathway.id === 'interstellar' && (
             <DistanceLadder currentSunAU={telemetry.sunDistanceAU} />
@@ -376,8 +458,18 @@ export function JourneyHud() {
           )}
         </aside>
 
-        {/* Right Column: Physics Challenges, In-Flight Events, Checkpoints & Completion */}
+        {/* Right Column: Decision Log, Physics Challenges, In-Flight Events, Checkpoints & Completion */}
         <section className="pointer-events-auto space-y-3 lg:col-span-7">
+          {/* Optional Decision Log Drawer */}
+          {decisionLogOpen && (
+            <DecisionLog
+              crew={crew}
+              decisionLog={decisionLog}
+              events={journey.events}
+              onClose={() => setDecisionLogOpen(false)}
+            />
+          )}
+
           {/* 1. Active Physics Scenario Console */}
           {activeChallenge && (
             <PhysicsConsole
@@ -388,35 +480,21 @@ export function JourneyHud() {
             />
           )}
 
-          {/* 2. Pending In-Flight Event Decision Card */}
-          {journey.pending && (
-            <div
-              className="hud-enter rounded-2xl border border-warn/60 bg-panel/95 p-5 shadow-xl backdrop-blur"
-              role="region"
-              aria-label={`In-flight event: ${journey.pending.title}`}
-            >
-              <p className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-warn">
-                ⚠ In-Flight Anomaly · Day {fmt(journey.pending.day)}
-              </p>
-              <h3 className="mt-1 text-xl font-bold text-ink">{journey.pending.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink/90">
-                {journey.pending.description}
-              </p>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2" role="group" aria-label="Event Choices">
-                {journey.pending.options.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => chooseEventOption(option.id)}
-                    className="rounded-xl border border-line bg-black/40 p-3.5 text-left transition hover:border-accent focus-visible:outline-2 focus-visible:outline-accent"
-                  >
-                    <div className="font-semibold text-ink">{option.label}</div>
-                    <div className="mt-1 text-xs text-muted">{option.description}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* 2. Pending In-Flight Event / Negotiation Modal & Post-Event Outcome Card */}
+          <EventModal
+            journey={journey}
+            crew={crew}
+            activeVote={activeVote}
+            lastResolution={lastEventResolution}
+            onChooseOption={(optId) => chooseEventOption(optId)}
+            onStartTeamVote={(useHandoff) => startEventVote(useHandoff)}
+            onAcknowledgeHandoff={() => acknowledgeVoteHandoff()}
+            onToggleHandoffMode={(useHandoff) => setVoteHandoff(useHandoff)}
+            onCastVote={(memberId, optId, reaction) => submitMemberVote(memberId, optId, reaction)}
+            onBreakTie={(optId) => breakVoteTie(optId)}
+            onExpireTimer={() => expireNegotiationTimer()}
+            onDismissResolution={() => dismissEventResolution()}
+          />
 
           {/* 3. Mission Ended Summary Card */}
           {journey.ended && (

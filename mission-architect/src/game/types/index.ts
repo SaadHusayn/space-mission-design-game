@@ -96,19 +96,31 @@ export function emptyDesign(): Design {
 /** Resource deltas recorded for one design decision (report "why" bullets use these). */
 export type DecisionDelta = 'mass' | 'cost' | 'power' | 'data' | 'deltaV' | 'science';
 
-/** One design choice, logged during assembly for the mission report. */
+/** One design choice, team vote, or event decision logged for the mission report. */
 export interface DecisionLogEntry {
   /** 1-based, in order. */
   id: number;
   /** The role that owns the changed slot ('crew' in solo mode). */
   actor: string;
-  /** What was done, e.g. "equip" / "unequip" / "bus" / "option". */
+  /** Call-sign of the crew member who proposed or made the decision (optional). */
+  proposerCallSign?: string;
+  /** What was done, e.g. "equip" / "unequip" / "bus" / "option" / "event" / "negotiation" / "vote". */
   kind: string;
   slotId: SlotId | null;
   partId: string | null;
   partName: string;
   /** Change in each affected resource (mass in kg, cost in $M, power in W, data in Gb/day, Δv in m/s, science in points). */
   deltas: Partial<Record<DecisionDelta, number>>;
+  /** Optional vote summary when decided by team vote. */
+  voteSummary?: {
+    proposalTitle: string;
+    votes: { memberId: string; callSign: string; roles: string[]; choice: string; reaction?: string }[];
+    outcome: 'approved' | 'rejected' | 'tie_broken' | 'timeout_default';
+    chosenOption?: string;
+    consensus: boolean;
+  };
+  /** Optional explanation of the outcome (for events and negotiations). */
+  outcomeText?: string;
 }
 
 /** One mission being planned: where, how, and at what difficulty. */

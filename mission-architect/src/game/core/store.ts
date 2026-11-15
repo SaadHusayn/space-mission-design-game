@@ -11,20 +11,42 @@ import type { ChallengeResult } from '../challenges/types';
 import type { DecisionDelta, DecisionLogEntry, Design, Difficulty, PathwayId, SlotId } from '../types';
 import { emptyDesign } from '../types';
 import { gameData, getLaunchVehicle, getPathway } from '../data/loadData';
-import { AVATAR_COLOURS, MAX_CREW, ROLE_IDS, createCrew, type CrewMember } from './crew';
+import { AVATAR_COLOURS, MAX_CREW, ROLE_IDS, createCrew, holderOf, type CrewMember, type RoleId } from './crew';
 import { applyChange, redoChange, undoChange, type DesignChange } from './designActions';
 import { canTransition, type Phase } from './machine';
 import { DEFAULT_PATCH, sanitisePatch, type MissionPatch } from './patch';
 import { isUnlocked, recordResult, sanitiseProgress, type Progress } from './progress';
 import { isPrologueStep, nextPrologueStep, type PrologueStep } from './prologue';
+import {
+  createDesignProposal,
+  createEventProposal,
+  requiresTeamVote,
+} from './proposals';
+import {
+  acknowledgeHandoff,
+  castVote,
+  resolveCommanderTieBreak,
+  resolveNegotiationTimeout,
+  setVoteHandoffMode,
+  startVoteSession,
+  type VoteSession,
+} from './votes';
 import type { LaunchResult } from '../sim/ascent';
 import { summarizeDesign } from '../sim/design';
 import {
+  evaluateEventMitigations,
+  getEventCatalogueEntry,
+  getNegotiationEvent,
+  type EventMitigationStatus,
+} from '../sim/events';
+import {
   advanceJourney,
   applyChallengeToJourney,
+  journeyEventContext,
   nextJourneyMilestoneDay,
   resolveEvent,
   startJourney,
+  triggerJourneyEvent,
   type JourneyState,
 } from '../sim/journey';
 import { createMission } from '../sim/mission';
@@ -56,6 +78,17 @@ export interface Profile {
 export interface CurrentMission {
   pathwayId: PathwayId;
   trajectoryId: string | null;
+}
+
+export interface LastEventResolution {
+  eventId: string;
+  day: number;
+  title: string;
+  optionId: string;
+  optionLabel: string;
+  outcome: string;
+  mitigations: EventMitigationStatus[];
+  voteSummary?: DecisionLogEntry['voteSummary'];
 }
 
 /**
@@ -93,7 +126,7 @@ export interface GameState {
   design: Design | null;
   designPast: Design[];
   designFuture: Design[];
-  /** Every design choice made during assembly, for the mission report. */
+  /** Every design choice, team vote, and event decision logged for the mission report. */
   decisionLog: DecisionLogEntry[];
   /** Selected launch vehicle ID (Phase 06), or null before selection. */
   vehicleId: string | null;
@@ -107,6 +140,14 @@ export interface GameState {
   journey: JourneyState | null;
   /** Chosen Jupiter flyby perijove in Jupiter radii (2, 5, or 20) from C-ASSIST. */
   flybyRadii: number | null;
+  /** Index of the active crew member in hot-seat team play (0..crew.length-1). */
+  activeCrewIndex: number;
+  /** Active proposal / team vote session (Phase 08). */
+  activeVote: VoteSession | null;
+  /** Most recently resolved in-flight event / negotiation outcome card (Phase 08). */
+  lastEventResolution: LastEventResolution | null;
+  /** IDs of scripted negotiation dilemmas already triggered on this mission. */
+  triggeredNegotiationIds: string[];
 
   /** Moves to another phase. Returns false if the transition isn't allowed. */
   goTo: (phase: Phase) => boolean;
@@ -114,10 +155,25 @@ export interface GameState {
   setSettingsOpen: (open: boolean) => void;
 
   /** Applies one design change (equip/unequip/bus/instrument/option). False when nothing changed. */
-  editDesign: (change: DesignChange) => boolean;
+  editDesign: (change: DesignChange, voteSummary?: DecisionLogEntry['voteSummary']) => boolean;
+  /** In team mode, checks role ownership / budget limits and either applies immediately or opens a proposal vote. */
+  proposeDesignChange: (change: DesignChange) => 'applied' | 'proposed' | 'noop';
   /** Steps the design back/forward one change. Does not touch the decision log. */
   undoDesign: () => void;
   redoDesign: () => void;
+
+  /** Hot-seat turn & voting actions (Phase 08). */
+  setActiveCrewIndex: (index: number) => void;
+  nextCrewTurn: () => void;
+  startEventVote: (useHandoff?: boolean) => boolean;
+  startNegotiation: (negotiationId?: string) => boolean;
+  setVoteHandoff: (useHandoff: boolean) => void;
+  acknowledgeVoteHandoff: () => void;
+  submitMemberVote: (memberId: string, optionId: string, reaction?: string) => void;
+  breakVoteTie: (optionId: string) => void;
+  expireNegotiationTimer: () => void;
+  cancelActiveVote: () => void;
+  dismissEventResolution: () => void;
 
   /** Moves to the Engineering Review Board (from ASSEMBLY). */
   submitToErb: () => boolean;
@@ -146,7 +202,7 @@ export interface GameState {
   /** Advances the journey to the next milestone (checkpoint, scheduled challenge, event, or end). */
   stepToNextMilestone: () => void;
   /** Resolves a pending in-flight event with the chosen option ID. */
-  chooseEventOption: (optionId: string) => boolean;
+  chooseEventOption: (optionId: string, voteSummary?: DecisionLogEntry['voteSummary']) => boolean;
   /** Completes an in-flight physics challenge and applies its consequences to the journey. */
   completeJourneyChallenge: (challengeId: string, result: ChallengeResult) => void;
   /** Finishes the journey/operations phase and transitions to REPORT. */
@@ -249,10 +305,11 @@ function partFor(design: Design | null, change: DesignChange): { partId: string 
 
 /** Builds the decision-log entry for a change, with the resource deltas it caused. */
 function decisionEntry(
-  state: Pick<GameState, 'decisionLog' | 'design'>,
+  state: Pick<GameState, 'decisionLog' | 'design' | 'profile' | 'activeCrewIndex'>,
   change: DesignChange,
   before: ReturnType<typeof summarizeDesign>,
   after: ReturnType<typeof summarizeDesign>,
+  voteSummary?: DecisionLogEntry['voteSummary'],
 ): DecisionLogEntry {
   const deltas: Partial<Record<DecisionDelta, number>> = {};
   const record = (key: DecisionDelta, value: number) => {
@@ -265,14 +322,35 @@ function decisionEntry(
   record('deltaV', after.deltaV - before.deltaV);
   record('science', after.science - before.science);
   const { partId, partName } = partFor(state.design ?? null, change);
+  const actor = actorFor(change);
+  const activeMember = state.profile.crew[state.activeCrewIndex] ?? holderOf(state.profile.crew, actor as RoleId);
   return {
     id: state.decisionLog.length + 1,
-    actor: actorFor(change),
+    actor,
+    proposerCallSign: activeMember?.callSign || undefined,
     kind: change.kind,
     slotId: change.kind === 'equip' || change.kind === 'unequip' ? change.slot : null,
     partId,
     partName,
     deltas,
+    ...(voteSummary ? { voteSummary } : {}),
+  };
+}
+
+function toVoteSummary(session: VoteSession): DecisionLogEntry['voteSummary'] | undefined {
+  if (!session.resolution) return undefined;
+  return {
+    proposalTitle: session.proposal.title,
+    votes: session.votes.map((v) => ({
+      memberId: v.memberId,
+      callSign: v.callSign,
+      roles: [...v.roles],
+      choice: v.optionId,
+      ...(v.reaction ? { reaction: v.reaction } : {}),
+    })),
+    outcome: session.resolution.outcome,
+    chosenOption: session.resolution.winningOptionId,
+    consensus: session.resolution.consensus,
   };
 }
 
@@ -306,6 +384,54 @@ export function sanitiseProfile(value: unknown): Profile {
 export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameState> {
   const { storage, prefersReducedMotion = false } = options;
 
+  const applyResolvedVote = (
+    session: VoteSession,
+    set: StoreApi<GameState>['setState'],
+    get: StoreApi<GameState>['getState'],
+  ) => {
+    const resolution = session.resolution;
+    if (!resolution) return;
+    const summary = toVoteSummary(session);
+    const { proposal } = session;
+
+    if (proposal.kind === 'design' && proposal.designChange) {
+      if (resolution.outcome === 'rejected') {
+        const state = get();
+        const rejectedEntry: DecisionLogEntry = {
+          id: state.decisionLog.length + 1,
+          actor: proposal.ownerRole,
+          proposerCallSign: proposal.proposerCallSign,
+          kind: 'vote_rejected',
+          slotId:
+            proposal.designChange.kind === 'equip' || proposal.designChange.kind === 'unequip'
+              ? proposal.designChange.slot
+              : null,
+          partId: null,
+          partName: proposal.title,
+          deltas: {},
+          voteSummary: summary,
+          outcomeText: resolution.summaryText,
+        };
+        set({
+          activeVote: null,
+          decisionLog: [...state.decisionLog, rejectedEntry],
+        });
+        return;
+      }
+      set({ activeVote: null });
+      get().editDesign(proposal.designChange, summary);
+      return;
+    }
+
+    if ((proposal.kind === 'event' || proposal.kind === 'negotiation') && get().journey?.pending) {
+      set({ activeVote: null });
+      get().chooseEventOption(resolution.winningOptionId, summary);
+      return;
+    }
+
+    set({ activeVote: null });
+  };
+
   const initializer = (
     set: StoreApi<GameState>['setState'],
     get: StoreApi<GameState>['getState'],
@@ -326,6 +452,10 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     completedChallengeIds: [],
     journey: null,
     flybyRadii: null,
+    activeCrewIndex: 0,
+    activeVote: null,
+    lastEventResolution: null,
+    triggeredNegotiationIds: [],
 
     goTo: (phase) => {
       if (!canTransition(get().phase, phase)) return false;
@@ -335,7 +465,7 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     setSetting: (key, value) => set((state) => ({ settings: { ...state.settings, [key]: value } })),
     setSettingsOpen: (open) => set({ settingsOpen: open }),
 
-    editDesign: (change) => {
+    editDesign: (change, voteSummary) => {
       const state = get();
       if (!state.design || !state.mission) return false;
       const context = missionContextOf(state);
@@ -347,10 +477,52 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
         design: next.present,
         designPast: next.past,
         designFuture: next.future,
-        decisionLog: [...state.decisionLog, decisionEntry(state, change, before, after)],
+        decisionLog: [...state.decisionLog, decisionEntry(state, change, before, after, voteSummary)],
       });
       return true;
     },
+
+    proposeDesignChange: (change) => {
+      const state = get();
+      if (!state.design || !state.mission) return 'noop';
+      const context = missionContextOf(state);
+      const before = summarizeDesign(state.design, context);
+      const next = applyChange({ past: state.designPast, present: state.design, future: state.designFuture }, change);
+      if (next.present === state.design) return 'noop';
+      const after = summarizeDesign(next.present, context);
+
+      const crew = state.profile.crew;
+      const activeMember = crew[state.activeCrewIndex] ?? crew[0];
+      const check = requiresTeamVote({
+        crew,
+        activeMemberId: activeMember?.id ?? 'p1',
+        change,
+        before,
+        after,
+        mission: context,
+      });
+
+      if (!check.required) {
+        get().editDesign(change);
+        return 'applied';
+      }
+
+      const proposal = createDesignProposal({
+        id: `prop-${state.decisionLog.length + 1}`,
+        crew,
+        activeMemberId: activeMember?.id ?? 'p1',
+        change,
+        design: state.design,
+        before,
+        after,
+        reason: check.reason!,
+      });
+      set({
+        activeVote: startVoteSession(proposal, crew, false),
+      });
+      return 'proposed';
+    },
+
     undoDesign: () => {
       const state = get();
       if (!state.design) return;
@@ -363,6 +535,114 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
       const next = redoChange({ past: state.designPast, present: state.design, future: state.designFuture });
       set({ design: next.present, designPast: next.past, designFuture: next.future });
     },
+
+    setActiveCrewIndex: (index) => {
+      const crewLen = get().profile.crew.length;
+      if (crewLen <= 0) return;
+      const safe = ((index % crewLen) + crewLen) % crewLen;
+      set({ activeCrewIndex: safe });
+    },
+    nextCrewTurn: () => {
+      const state = get();
+      const crewLen = state.profile.crew.length;
+      if (crewLen <= 1) return;
+      set({ activeCrewIndex: (state.activeCrewIndex + 1) % crewLen });
+    },
+    startEventVote: (useHandoff = false) => {
+      const state = get();
+      if (!state.journey?.pending) return false;
+      const proposal = createEventProposal({
+        id: `ev-${state.journey.pending.eventId}-${state.journey.day}`,
+        crew: state.profile.crew,
+        pending: state.journey.pending,
+      });
+      set({
+        activeVote: startVoteSession(proposal, state.profile.crew, useHandoff),
+      });
+      return true;
+    },
+    startNegotiation: (negotiationId) => {
+      const state = get();
+      if (!state.journey || state.journey.ended || state.journey.pending) return false;
+      const candidates = ['neg_budget_cut', 'neg_bonus_target', 'neg_bandwidth_clash'];
+      const chosenId =
+        negotiationId ??
+        candidates.find((id) => !state.triggeredNegotiationIds.includes(id)) ??
+        'neg_budget_cut';
+      const nextJourney = triggerJourneyEvent(state.journey, chosenId);
+      if (!nextJourney.pending) return false;
+      const triggered = state.triggeredNegotiationIds.includes(chosenId)
+        ? state.triggeredNegotiationIds
+        : [...state.triggeredNegotiationIds, chosenId];
+
+      let activeVote: VoteSession | null = null;
+      if (state.profile.crew.length > 1) {
+        const proposal = createEventProposal({
+          id: `neg-${chosenId}-${nextJourney.day}`,
+          crew: state.profile.crew,
+          pending: nextJourney.pending,
+        });
+        activeVote = startVoteSession(proposal, state.profile.crew, false);
+      }
+
+      set({
+        journey: nextJourney,
+        triggeredNegotiationIds: triggered,
+        activeVote,
+        lastEventResolution: null,
+      });
+      return true;
+    },
+    setVoteHandoff: (useHandoff) => {
+      const state = get();
+      if (!state.activeVote) return;
+      set({ activeVote: setVoteHandoffMode(state.activeVote, useHandoff) });
+    },
+    acknowledgeVoteHandoff: () => {
+      const state = get();
+      if (!state.activeVote) return;
+      set({ activeVote: acknowledgeHandoff(state.activeVote) });
+    },
+    submitMemberVote: (memberId, optionId, reaction) => {
+      const state = get();
+      if (!state.activeVote) return;
+      const updated = castVote(state.activeVote, memberId, optionId, reaction);
+      if (updated.status === 'resolved') {
+        applyResolvedVote(updated, set, get);
+      } else {
+        set({ activeVote: updated });
+      }
+    },
+    breakVoteTie: (optionId) => {
+      const state = get();
+      if (!state.activeVote || state.activeVote.status !== 'tie_break') return;
+      const resolved = resolveCommanderTieBreak(state.activeVote, optionId);
+      applyResolvedVote(resolved, set, get);
+    },
+    expireNegotiationTimer: () => {
+      const state = get();
+      if (state.activeVote) {
+        const resolved = resolveNegotiationTimeout(state.activeVote);
+        applyResolvedVote(resolved, set, get);
+        return;
+      }
+      if (state.journey?.pending) {
+        const neg = getNegotiationEvent(state.journey.pending.eventId);
+        const fallback = neg?.commanderDefaultOptionId ?? state.journey.pending.options[0]?.id;
+        if (fallback) {
+          get().chooseEventOption(fallback, {
+            proposalTitle: state.journey.pending.title,
+            votes: [],
+            outcome: 'timeout_default',
+            chosenOption: fallback,
+            consensus: false,
+          });
+        }
+      }
+    },
+    cancelActiveVote: () => set({ activeVote: null }),
+    dismissEventResolution: () => set({ lastEventResolution: null }),
+
     submitToErb: () => {
       const state = get();
       if (!state.design || !state.mission) return false;
@@ -400,11 +680,13 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
         if (Math.abs(dvReqDiff) > 1e-9) deltas.deltaV = -dvReqDiff;
         const powerDiff = after.powerAvailable - before.powerAvailable;
         if (Math.abs(powerDiff) > 1e-9) deltas.power = Math.round(powerDiff);
+        const cdr = holderOf(state.profile.crew, 'commander');
         decisionLog = [
           ...decisionLog,
           {
             id: decisionLog.length + 1,
             actor: 'commander',
+            proposerCallSign: cdr?.callSign || undefined,
             kind: 'trajectory',
             slotId: null,
             partId: chosen.id,
@@ -438,11 +720,13 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
       let decisionLog = state.decisionLog;
       if (state.design) {
         const costDiff = nextVehicle.cost - (prevVehicle?.cost ?? 0);
+        const eng = holderOf(state.profile.crew, 'engineer');
         decisionLog = [
           ...decisionLog,
           {
             id: decisionLog.length + 1,
             actor: 'engineer',
+            proposerCallSign: eng?.callSign || undefined,
             kind: 'vehicle',
             slotId: null,
             partId: nextVehicle.id,
@@ -504,6 +788,9 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
         journey: next,
         completedChallengeIds: [],
         flybyRadii: null,
+        activeVote: null,
+        lastEventResolution: null,
+        triggeredNegotiationIds: [],
       });
       return true;
     },
@@ -511,7 +798,10 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
       const state = get();
       if (!state.journey || state.journey.ended || state.journey.pending) return;
       const next = advanceJourney(state.journey, Math.max(1, maxDays));
-      set({ journey: next });
+      set({
+        journey: next,
+        lastEventResolution: next.pending ? null : state.lastEventResolution,
+      });
       if (next.day > next.cruiseEnd && !next.ended && get().phase === 'JOURNEY') {
         get().goTo('OPERATIONS');
       }
@@ -523,12 +813,50 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
       const days = Math.max(1, target - state.journey.day);
       get().stepJourney(days);
     },
-    chooseEventOption: (optionId) => {
+    chooseEventOption: (optionId, voteSummary) => {
       const state = get();
-      if (!state.journey?.pending) return false;
+      const pending = state.journey?.pending;
+      if (!state.journey || !pending) return false;
       try {
+        const ctx = journeyEventContext(state.journey);
+        const mitigations = evaluateEventMitigations(pending.eventId, ctx);
         const next = resolveEvent(state.journey, optionId);
-        set({ journey: next });
+        const resolvedLog = next.events.at(-1);
+        const cat = getEventCatalogueEntry(pending.eventId);
+        const ownerRole: RoleId = cat?.ownerRole ?? 'commander';
+        const ownerHolder = holderOf(state.profile.crew, ownerRole) ?? state.profile.crew[state.activeCrewIndex];
+        const kind = cat?.kind === 'negotiation' || getNegotiationEvent(pending.eventId) ? 'negotiation' : 'event';
+
+        const logEntry: DecisionLogEntry = {
+          id: state.decisionLog.length + 1,
+          actor: ownerRole,
+          proposerCallSign: ownerHolder?.callSign || undefined,
+          kind,
+          slotId: null,
+          partId: optionId,
+          partName: `${pending.title}: ${resolvedLog?.optionLabel ?? optionId}`,
+          deltas: {},
+          ...(voteSummary ? { voteSummary } : {}),
+          outcomeText: resolvedLog?.outcome,
+        };
+
+        set({
+          journey: next,
+          activeVote: null,
+          decisionLog: [...state.decisionLog, logEntry],
+          lastEventResolution: resolvedLog
+            ? {
+                eventId: resolvedLog.eventId,
+                day: resolvedLog.day,
+                title: resolvedLog.title,
+                optionId: resolvedLog.optionId,
+                optionLabel: resolvedLog.optionLabel,
+                outcome: resolvedLog.outcome,
+                mitigations,
+                voteSummary,
+              }
+            : null,
+        });
         return true;
       } catch {
         return false;
@@ -558,7 +886,11 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
       return state.goTo('REPORT');
     },
 
-    setCrew: (crew) => set((state) => ({ profile: { ...state.profile, crew: crew.map((member) => ({ ...member, roles: [...member.roles] })) } })),
+    setCrew: (crew) =>
+      set((state) => ({
+        profile: { ...state.profile, crew: crew.map((member) => ({ ...member, roles: [...member.roles] })) },
+        activeCrewIndex: 0,
+      })),
     setDifficulty: (difficulty) => set((state) => ({ profile: { ...state.profile, difficulty } })),
     setPatch: (patch) => set((state) => ({ profile: { ...state.profile, patch: sanitisePatch(patch) } })),
     markCutsceneSeen: (id) =>
@@ -599,6 +931,10 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
         completedChallengeIds: [],
         journey: null,
         flybyRadii: null,
+        activeCrewIndex: 0,
+        activeVote: null,
+        lastEventResolution: null,
+        triggeredNegotiationIds: [],
         phase: 'BRIEFING',
       });
       return true;
@@ -618,6 +954,10 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
         completedChallengeIds: [],
         journey: null,
         flybyRadii: null,
+        activeCrewIndex: 0,
+        activeVote: null,
+        lastEventResolution: null,
+        triggeredNegotiationIds: [],
       });
       return state.goTo('ASSEMBLY');
     },

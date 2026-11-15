@@ -47,13 +47,30 @@ src/game/data/events.json (complete) · dialogue/advisors.json
 ```
 
 ## 6. Acceptance criteria
-- [ ] ≥ 6 event types are implemented with ≥ 2 choices each. Each choice has a different consequence and an explanation.
-- [ ] Event outcomes depend on the built design (the mitigation column works).
-- [ ] Hot-seat team play works for 2, 3 and 4 players. Role ownership, proposals and votes work, and tie-breaks go to the Commander.
-- [ ] Solo play gets advisor opinions on every event.
-- [ ] The same seed + the same choices → the same outcome (determinism).
-- [ ] The decision log captures every vote and event decision.
+- [x] ≥ 6 event types are implemented with ≥ 2 choices each. Each choice has a different consequence and an explanation.
+- [x] Event outcomes depend on the built design (the mitigation column works).
+- [x] Hot-seat team play works for 2, 3 and 4 players. Role ownership, proposals and votes work, and tie-breaks go to the Commander.
+- [x] Solo play gets advisor opinions on every event.
+- [x] The same seed + the same choices → the same outcome (determinism).
+- [x] The decision log captures every vote and event decision.
 
 ## 7. Risks and tips
 - Don't flood players with events. Cap them per mission and space them out.
 - Hot-seat UX: make it obvious whose turn it is (a big role colour + name banner).
+
+---
+
+## Build notes (Phase 08 completed)
+
+- **Expanded Event Catalogue & Advisor Dialogue (`src/game/data/events.json`, `src/game/data/advisors.json`, `src/game/data/dialogue/advisors.json`, `src/game/sim/events.ts`)**:
+  - Validated 12 catalogue events (9 random/scripted flight anomalies + 3 scripted team negotiation dilemmas `neg_budget_cut`, `neg_bonus_target`, `neg_bandwidth_clash` with competing role stances and 45s countdown timers) and NPC advisor recommendations (`Dr. Imani Okafor`, `Kenji Watanabe`, `Dr. Lucía Ferreira`, `CAPCOM "Echo"`, `Director Hale`).
+  - Added `evaluateEventMitigations(eventId, ctx)` and `advisorsForEvent(eventId, ctx)` so every event shows how the player's built spacecraft hardware mitigates or is vulnerable to the hazard, paired with engineering advisor bubbles.
+- **Hot-Seat Role Ownership, Proposals, Voting & Collaboration Scoring (`src/game/core/proposals.ts`, `src/game/core/votes.ts`, `src/game/core/votes.test.ts`, `src/game/core/store.ts`)**:
+  - Implemented `requiresTeamVote`, `createDesignProposal`, `createEventProposal`, `startVoteSession`, `acknowledgeHandoff`, `castVote`, `resolveCommanderTieBreak`, `resolveNegotiationTimeout`, and `computeCollaborationMetrics` supporting 1, 2, 3, and 4 players.
+  - Integrated `activeCrewIndex`, `activeVote`, `lastEventResolution`, `proposeDesignChange`, `startEventVote`, `startNegotiation`, `submitMemberVote`, `breakVoteTie`, and `expireNegotiationTimer` into `gameStore`, recording every proposal, vote, reaction chip, tie-break, and event outcome in `decisionLog`.
+- **3D Event Visuals & UI Components (`src/three/{AlarmLight,StormParticles,ImpactBurst}.tsx`, `src/ui/{EventModal,VotePanel,HotseatHandoff,AdvisorBubble,NegotiationTimer,DecisionLog}.tsx`)**:
+  - Built 3D `AlarmLight` (pulsing red beacon ring), `StormParticles` (solar ion stream), `ImpactBurst` (micrometeoroid debris burst), and comms blackout link indicator in `JourneyScene.tsx`, plus Mission Control crew status reaction badges in `JourneyHud.tsx`.
+  - Built `EventModal`, `VotePanel` (with role-coloured crew avatars dropping onto option cards and quick reaction chips), `HotseatHandoff` (pass-the-device curtain), `AdvisorBubble`, `NegotiationTimer`, and `DecisionLog`, wired into `AssemblyHud.tsx` and `JourneyHud.tsx`.
+- **Verification**:
+  - 17 unit test files passing (229 unit tests passing, 1 skipped).
+  - Playwright E2E test added in `tests/e2e/events-team.spec.ts` covering hot-seat role proposals, pass-the-device handoff, Commander tie-break, in-flight negotiation dilemmas, advisor bubbles, and the decision log.
