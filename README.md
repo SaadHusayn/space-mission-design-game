@@ -38,5 +38,5 @@ npm run dev     # open http://localhost:3000 and press PLAY
 
 ## Current status
 
-Phases 01–06 are done: foundation, game rules and physics engine, astronaut recruitment and training, 3D pathway map with mission briefings, the 3D spacecraft assembly bay with the Engineering Review Board, and the 3D trajectory planning room, launch vehicle lineup, GO/NO-GO launch poll, and interactive 3D launch & orbit insertion sequence (222 unit tests, 11 Playwright browser tests). Next: Phase 07 (journeys and physics scenarios).
+Phases 01–07 are done: foundation, game rules and physics engine, astronaut recruitment and training, 3D pathway map with mission briefings, the 3D spacecraft assembly bay with the Engineering Review Board, the 3D trajectory planning room, launch vehicle lineup, GO/NO-GO launch poll, interactive 3D launch & orbit insertion sequence, and 3D Solar System journeys, live mission dashboard, pathway destination scenes, and in-flight physics scenarios (223 unit tests, 13 Playwright browser tests). Next: Phase 08 (events, crew decisions and team play).
 See [HANDOFF.md](HANDOFF.md) for details.

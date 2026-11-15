@@ -10,7 +10,7 @@ tests every design choice, and the mission report explains why the mission succe
 
 ## Status
 
-**Phases 01–06 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
+**Phases 01–07 are built.** The full plan is in [`../implementation-plan/`](../implementation-plan/README.md).
 
 | Phase | State |
 |---|---|
@@ -20,7 +20,8 @@ tests every design choice, and the mission report explains why the mission succe
 | P04 Mission briefing and pathways: 3D pathway map, chapter unlocks, briefing cutscenes, mission contract | ✅ built |
 | P05 Spacecraft assembly and Engineering Review: 3D assembly bay, procedural part meshes, live resource HUD, physics calculator, ERB review | ✅ built |
 | P06 Trajectory, launch vehicle, launch and orbit: 3D trajectory room, 4-rocket lineup, GO/NO-GO poll, CS-04 rollout, 3D ascent & orbit insertion challenge | ✅ built |
-| P07–P11 | next / planned |
+| P07 Journeys and physics scenarios: 3D Solar System & destination scenes (LEO, Moon, Mars, Jupiter, Interstellar, Exoplanet), live telemetry dashboard, time controls, in-flight physics challenges, light-curve analyzer & distance ladder | ✅ built |
+| P08–P11 | next / planned |
 
 ## Run it
 

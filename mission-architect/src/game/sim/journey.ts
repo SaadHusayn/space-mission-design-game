@@ -9,7 +9,9 @@
  */
 import { gameData, type GameData } from '../data/loadData';
 import { createRng } from '../core/rng';
-import { DAYS_PER_YEAR, dataPerDayGb, downlinkRateMbps, rtgPower, sunlightFraction } from '../physics';
+import { challengesFor } from '../challenges/generator';
+import type { Challenge, ChallengeResult } from '../challenges/types';
+import { DAYS_PER_YEAR, dataPerDayGb, downlinkRateMbps, lightDelaySeconds, rtgPower, sunlightFraction } from '../physics';
 import type { Design, LaunchVehicle, MissionContext } from '../types';
 import { HEALTH_LOSS_PER_DAY, summarizeDesign, type DesignSummary } from './design';
 import { EVENTS, MAX_EVENTS, getEvent, type EventContext, type EventEffect, type EventOption } from './events';
@@ -623,4 +625,251 @@ export function runJourney(input: JourneyInput, choose?: Chooser, data: GameData
     if (state.pending) state = resolveEvent(state, choose ? choose(state.pending, state) : state.pending.options[0].id, data);
   }
   throw new Error('Journey did not finish');
+}
+
+export interface LiveTelemetry {
+  segment: Segment;
+  phaseLabel: string;
+  sunDistanceAU: number;
+  earthDistanceAU: number;
+  sunlightPercent: number;
+  powerSource: 'solar' | 'rtg' | 'none';
+  powerAvailable: number;
+  powerLoad: number;
+  fullLoad: number;
+  baseLoad: number;
+  survivalLoad: number;
+  survivalMode: boolean;
+  instrumentsOn: boolean;
+  batteryCapacityWh: number;
+  batteryPercent: number;
+  dataRateGbPerDay: number;
+  downlinkRateGbPerDay: number;
+  downlinkMbps: number;
+  storageCapacityGb: number;
+  signalDelaySeconds: number;
+  radToleranceKrad: number;
+  deltaVAvailable: number;
+  deltaVRequired: number;
+  deltaVRemaining: number;
+  spinRpm: number;
+  spinAcceleration: number;
+  progress: number;
+  segmentProgress: number;
+}
+
+export interface ScheduledChallenge {
+  day: number;
+  challenge: Challenge;
+}
+
+/** Real-time telemetry snapshot for the current day of a journey. */
+export function liveTelemetry(state: JourneyState, data: GameData = gameData): LiveTelemetry {
+  const summary = summaryOf(state, data);
+  const { mission } = state.input;
+  const env = mission.env;
+  const day = Math.min(state.day, state.totalDays);
+  const segment = state.ended ? 'done' : segmentOf(state, day);
+  const { sun, earth } = distances(state, day);
+  const active = state.effects.filter((item) => item.untilDay > day).map((item) => item.effect);
+  const powerFactor = active.reduce((factor, effect) => factor * (effect.powerFactor ?? 1), 1);
+  const available = solarNow(state, summary, day, powerFactor);
+  const fullLoad = summary.powerLoad;
+  const baseLoad = fullLoad - instrumentsDraw(summary);
+  const resolved = summary.resolved;
+  const survivalLoad = baseLoad - SURVIVAL_COMMS_CUT * (resolved.comms?.powerDraw ?? 0);
+  const computerOffline = active.some((effect) => effect.computerOffline);
+  const wantInstruments =
+    segment === 'operations' && state.inserted && !computerOffline && !active.some((effect) => effect.instrumentsOff);
+  const instrumentsOn = available >= fullLoad && wantInstruments;
+  const survivalMode = available < baseLoad;
+  const batteryCapacityWh = resolved.battery?.energyWh ?? 0;
+  const batteryPercent = batteryCapacityWh > 0 ? Math.min(100, Math.max(0, (state.batteryWh / batteryCapacityWh) * 100)) : 0;
+
+  const downlinkOff = active.some((effect) => effect.downlinkOff);
+  const downlinkMbps =
+    downlinkOff || !resolved.comms ? 0 : downlinkRateMbps(resolved.comms.rateAt1AU, resolved.comms.maxRate, earth);
+  const downlinkRateGbPerDay =
+    downlinkOff || !resolved.comms
+      ? 0
+      : dataPerDayGb(downlinkMbps, env.contactHoursPerDay) * (survivalMode ? 1 - SURVIVAL_COMMS_CUT : 1);
+
+  let phaseLabel = 'Departure';
+  if (state.ended) {
+    phaseLabel = state.endReason === 'complete' ? 'Mission Complete' : 'Mission Ended';
+  } else if (day === 0 && state.checkpoints.length === 0) {
+    phaseLabel = 'Departure & Trans-Orbit Injection';
+  } else if (segment === 'cruise') {
+    phaseLabel = 'Deep-Space Cruise';
+  } else if (segment === 'operations') {
+    phaseLabel = day <= state.cruiseEnd + 1 ? `Arrival & Insertion: ${mission.pathway.destination}` : `Science Operations: ${mission.pathway.destination}`;
+  } else if (segment === 'return') {
+    phaseLabel = day >= state.totalDays - 1 ? 'Atmospheric Re-entry' : 'Earth Return Transit';
+  }
+
+  let segmentProgress = 1;
+  if (segment === 'cruise' && state.cruiseEnd > 0) {
+    segmentProgress = day / state.cruiseEnd;
+  } else if (segment === 'operations' && state.operationsEnd > state.cruiseEnd) {
+    segmentProgress = (day - state.cruiseEnd) / (state.operationsEnd - state.cruiseEnd);
+  } else if (segment === 'return' && state.totalDays > state.operationsEnd) {
+    segmentProgress = (day - state.operationsEnd) / (state.totalDays - state.operationsEnd);
+  }
+
+  return {
+    segment,
+    phaseLabel,
+    sunDistanceAU: sun,
+    earthDistanceAU: earth,
+    sunlightPercent: sunlightFraction(sun) * 100,
+    powerSource: resolved.power ? resolved.power.source : 'none',
+    powerAvailable: available,
+    powerLoad: instrumentsOn ? fullLoad : survivalMode ? survivalLoad : baseLoad,
+    fullLoad,
+    baseLoad,
+    survivalLoad,
+    survivalMode,
+    instrumentsOn,
+    batteryCapacityWh,
+    batteryPercent,
+    dataRateGbPerDay: instrumentsOn ? summary.dataPerDay : 0,
+    downlinkRateGbPerDay,
+    downlinkMbps,
+    storageCapacityGb: resolved.computer?.storageGb ?? 0,
+    signalDelaySeconds: lightDelaySeconds(earth),
+    radToleranceKrad: resolved.computer?.radToleranceKrad ?? 0,
+    deltaVAvailable: summary.deltaV,
+    deltaVRequired: env.deltaV,
+    deltaVRemaining: state.inserted ? Math.max(0, summary.deltaV - env.deltaV) : summary.deltaV,
+    spinRpm: summary.spinRpm,
+    spinAcceleration: summary.spinAcceleration,
+    progress: state.totalDays > 0 ? Math.min(1, day / state.totalDays) : 1,
+    segmentProgress: Math.min(1, Math.max(0, segmentProgress)),
+  };
+}
+
+/** Schedules pathway-specific in-flight physics challenges at key journey days. */
+export function journeyChallengeSchedule(state: JourneyState, data: GameData = gameData): ScheduledChallenge[] {
+  const summary = summaryOf(state, data);
+  const all = challengesFor({
+    mission: state.input.mission,
+    summary,
+    vehicle: state.input.vehicle,
+  });
+  // Filter out launch TWR and initial LEO orbitSpeed if another orbital/journey topic exists,
+  // keeping 1–2 high-value in-flight challenges per pathway.
+  const inFlight = all.filter((c) => c.topic !== 'twr' && !(state.input.mission.pathway.id === 'leo' && c.topic === 'orbitSpeed'));
+  const selected = inFlight.length > 0 ? inFlight.slice(0, 2) : all.slice(0, 1);
+
+  return selected.map((challenge, index) => {
+    let day = Math.max(1, Math.floor(state.totalDays * 0.5));
+    switch (challenge.topic) {
+      case 'artificialGravity':
+        day = Math.max(2, Math.floor(state.cruiseEnd * 0.35));
+        break;
+      case 'sunlight':
+        day = state.cruiseEnd >= 4 ? Math.max(2, Math.floor(state.cruiseEnd * 0.65)) : Math.max(1, state.cruiseEnd + 1);
+        break;
+      case 'gravityAssist':
+        day =
+          state.input.mission.pathway.id === 'interstellar'
+            ? Math.max(2, Math.floor(state.cruiseEnd * 0.25))
+            : Math.max(1, state.cruiseEnd + 1);
+        break;
+      case 'rocketEquation':
+      case 'orbitSpeed':
+        day = Math.max(1, state.cruiseEnd + 1);
+        break;
+      case 'signalDelay':
+      case 'transit':
+      case 'centripetal':
+        day = Math.max(1, state.cruiseEnd + Math.max(1, Math.floor((state.operationsEnd - state.cruiseEnd) * 0.5)));
+        break;
+      default:
+        day = Math.max(1, Math.floor((state.totalDays * (index + 1)) / (selected.length + 1)));
+        break;
+    }
+    day = Math.min(Math.max(1, day), Math.max(1, state.totalDays - 1));
+    return { day, challenge };
+  }).sort((a, b) => a.day - b.day);
+}
+
+/** Returns the next milestone day where playback should pause (checkpoint, physics challenge, or mission end). */
+export function nextJourneyMilestoneDay(
+  state: JourneyState,
+  completedChallengeIds: readonly string[] = [],
+  data: GameData = gameData,
+): number {
+  const milestones = new Set<number>();
+  milestones.add(1);
+  if (state.cruiseEnd > 0) {
+    if (state.cruiseEnd >= 6) milestones.add(Math.floor(state.cruiseEnd / 2));
+    milestones.add(state.cruiseEnd + 1);
+  }
+  const opsSpan = state.operationsEnd - state.cruiseEnd;
+  if (opsSpan >= 2) {
+    milestones.add(state.cruiseEnd + Math.floor(opsSpan / 2));
+  }
+  if (state.totalDays > state.operationsEnd) {
+    milestones.add(state.operationsEnd + 1);
+  }
+  milestones.add(state.totalDays + 1);
+
+  for (const item of journeyChallengeSchedule(state, data)) {
+    if (!completedChallengeIds.includes(item.challenge.id)) {
+      milestones.add(item.day);
+    }
+  }
+
+  const sorted = [...milestones].sort((a, b) => a - b);
+  for (const target of sorted) {
+    if (target > state.day) return target;
+  }
+  return state.totalDays + 1;
+}
+
+/** Applies a completed in-flight physics challenge's consequence to the active journey. */
+export function applyChallengeToJourney(
+  previous: JourneyState,
+  challengeId: string,
+  result: ChallengeResult,
+  data: GameData = gameData,
+): { journey: JourneyState; flybyRadii: number | null } {
+  const state = structuredClone(previous);
+  const summary = summaryOf(state, data);
+  const { consequence } = result;
+  let flybyRadii: number | null = null;
+
+  if (challengeId === 'C-ASSIST') {
+    flybyRadii = result.optionId === 'close' ? 2 : result.optionId === 'medium' ? 5 : 20;
+    logCheckpoint(state, {
+      id: 'flyby_choice',
+      title: `Jupiter Perijove: ${flybyRadii} R_J`,
+      status: flybyRadii === 2 ? 'warn' : 'pass',
+      detail: result.explanation,
+    });
+  }
+
+  if (consequence.scienceFactor !== undefined) {
+    state.scienceFactor *= consequence.scienceFactor;
+  }
+  if (consequence.crewHealth !== undefined && state.crewHealth !== null) {
+    state.crewHealth = Math.max(0, Math.min(100, state.crewHealth + consequence.crewHealth));
+  }
+  if (consequence.electronicsDose !== undefined && consequence.electronicsDose > 0) {
+    const shield = summary.resolved.radiation?.electronicsAttenuation ?? 0;
+    state.electronicsDose += consequence.electronicsDose * (1 - shield);
+    const computer = summary.resolved.computer;
+    if (computer && state.electronicsDose > computer.radToleranceKrad && !state.ended) {
+      logCheckpoint(state, {
+        id: 'radiation',
+        title: 'Electronics failure',
+        status: 'fail',
+        detail: `After ${fmt(state.electronicsDose)} krad of radiation during the close Jupiter pass, the ${computer.name} stopped working.`,
+      });
+      end(state, 'radiation');
+    }
+  }
+
+  return { journey: state, flybyRadii };
 }

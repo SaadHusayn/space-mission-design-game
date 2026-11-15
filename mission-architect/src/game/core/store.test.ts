@@ -372,5 +372,65 @@ describe('trajectory, launch vehicle, GO/NO-GO & launch state (P06)', () => {
     expect(store.getState().launchResult?.ignitionStatus).toBe('clean');
     expect(store.getState().challengeResults).toHaveLength(1);
     expect(store.getState().challengeResults[0].correct).toBe(true);
+    expect(store.getState().journey).not.toBeNull();
+    expect(store.getState().journey?.checkpoints[0]?.id).toBe('launch');
+  });
+
+  it('steps through JOURNEY into OPERATIONS, handles challenges/events, and finishes to REPORT (P07)', async () => {
+    const { journeyChallengeSchedule, liveTelemetry } = await import('../sim/journey');
+    const store = trajectoryReadyStore();
+    store.getState().proceedToLaunchVehicle();
+    store.getState().selectLaunchVehicle('lv_medium');
+    store.getState().proceedToGoNoGo();
+    store.getState().confirmGoForLaunch();
+    store.getState().startLaunch();
+    store.getState().completeLaunch({
+      vehicleId: 'lv_medium',
+      ignitionStatus: 'clean',
+      ignitionBonusDv: 25,
+      maxQHandled: true,
+      structuralWarning: false,
+      peakDynamicPressureKPa: 25.4,
+      finalAltitudeKm: 400,
+      finalVelocityKms: 7.67,
+      deltaVMargin: 120,
+      insertionResult: null,
+    });
+
+    const initialJourney = store.getState().journey!;
+    expect(initialJourney).not.toBeNull();
+    const telemetry = liveTelemetry(initialJourney);
+    expect(telemetry.powerAvailable).toBeGreaterThan(0);
+    expect(telemetry.batteryPercent).toBeGreaterThan(0);
+
+    const schedule = journeyChallengeSchedule(initialJourney);
+    expect(schedule.length).toBeGreaterThan(0);
+    const firstChallenge = schedule[0].challenge;
+
+    // Step to next milestone and answer the scheduled challenge
+    store.getState().stepToNextMilestone();
+    if (store.getState().journey?.pending) {
+      const optId = store.getState().journey!.pending!.options[0].id;
+      expect(store.getState().chooseEventOption(optId)).toBe(true);
+    }
+    expect(store.getState().phase).toBe('OPERATIONS');
+
+    const evalResult = firstChallenge.evaluate(firstChallenge.options[0].id);
+    store.getState().completeJourneyChallenge(firstChallenge.id, evalResult);
+    expect(store.getState().completedChallengeIds).toContain(firstChallenge.id);
+
+    // Step until mission ends
+    for (let guard = 0; guard < 20 && !store.getState().journey?.ended; guard++) {
+      if (store.getState().journey?.pending) {
+        const optId = store.getState().journey!.pending!.options[0].id;
+        store.getState().chooseEventOption(optId);
+      }
+      store.getState().stepToNextMilestone();
+    }
+
+    expect(store.getState().journey?.ended).toBe(true);
+    expect(store.getState().journey?.endReason).toBe('complete');
+    expect(store.getState().finishJourney()).toBe(true);
+    expect(store.getState().phase).toBe('REPORT');
   });
 });

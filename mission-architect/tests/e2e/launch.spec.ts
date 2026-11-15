@@ -118,6 +118,6 @@ test('Phase 06 full flow: trajectory room, rocket compatibility, GO/NO-GO gating
   await snap(page, 'p06-08-orbit-achieved');
 
   await page.getByRole('button', { name: 'PROCEED TO MISSION JOURNEY →' }).click();
-  await expect(page.getByRole('heading', { name: /Orbit Insertion Complete — Deep-Space Journey/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Mission Flight & Operations — Low Earth orbit/ })).toBeVisible();
   expect(errors).toEqual([]);
 });

@@ -9,6 +9,7 @@ import { CutsceneOverlay } from '@/cutscenes/CutsceneOverlay';
 import { BriefingCutscene, ObjectiveScene } from '@/scenes/Briefing/BriefingScenes';
 import { ObjectivePanel } from '@/scenes/Briefing/ObjectivePanel';
 import { HangarScene } from '@/scenes/Hangar/HangarScene';
+import { JourneyScene } from '@/scenes/Journey/JourneyScene';
 import { LaunchScene, RolloutCutscene } from '@/scenes/Launch/LaunchScene';
 import { RocketLineupScene } from '@/scenes/LaunchPad/RocketLineupScene';
 import { TrajectoryScene } from '@/scenes/LaunchPad/TrajectoryScene';
@@ -20,6 +21,7 @@ import { PrologueScene } from '@/scenes/Prologue/PrologueScene';
 import { TitleScene } from '@/scenes/Title/TitleScene';
 import { AssemblyHud } from '@/ui/AssemblyHud';
 import { GoNoGoPanel } from '@/ui/GoNoGoPanel';
+import { JourneyHud } from '@/ui/JourneyHud';
 import { LaunchHud } from '@/ui/LaunchHud';
 import { Loader } from '@/ui/Loader';
 import { PreviewHud } from '@/ui/PreviewHud';
@@ -62,6 +64,7 @@ function SceneSwitch() {
   if (phase === 'LAUNCH_VEHICLE' || phase === 'GO_NO_GO') return <RocketLineupScene />;
   if (phase === 'ROLLOUT') return <RolloutCutscene />;
   if (phase === 'LAUNCH') return <LaunchScene />;
+  if (phase === 'JOURNEY' || phase === 'OPERATIONS') return <JourneyScene />;
   // Later phases get their own scenes as they are built.
   return <ModelPreviewScene />;
 }
@@ -92,6 +95,7 @@ function HudLayer() {
       {phase === 'LAUNCH_VEHICLE' && <RocketSelectHud />}
       {phase === 'GO_NO_GO' && <GoNoGoPanel />}
       {phase === 'LAUNCH' && <LaunchHud />}
+      {(phase === 'JOURNEY' || phase === 'OPERATIONS') && <JourneyHud />}
       {![
         'BOOT',
         'TITLE',
@@ -106,6 +110,8 @@ function HudLayer() {
         'GO_NO_GO',
         'ROLLOUT',
         'LAUNCH',
+        'JOURNEY',
+        'OPERATIONS',
       ].includes(phase) && <PreviewHud />}
       <SettingsDialog />
     </div>

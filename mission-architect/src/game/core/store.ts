@@ -19,6 +19,14 @@ import { isUnlocked, recordResult, sanitiseProgress, type Progress } from './pro
 import { isPrologueStep, nextPrologueStep, type PrologueStep } from './prologue';
 import type { LaunchResult } from '../sim/ascent';
 import { summarizeDesign } from '../sim/design';
+import {
+  advanceJourney,
+  applyChallengeToJourney,
+  nextJourneyMilestoneDay,
+  resolveEvent,
+  startJourney,
+  type JourneyState,
+} from '../sim/journey';
 import { createMission } from '../sim/mission';
 import { reviewDesign } from '../sim/review';
 
@@ -93,6 +101,12 @@ export interface GameState {
   launchResult: LaunchResult | null;
   /** Completed physics challenge results across the mission. */
   challengeResults: ChallengeResult[];
+  /** IDs of completed in-flight physics challenges. */
+  completedChallengeIds: string[];
+  /** Active mission journey flight state (Phase 07). */
+  journey: JourneyState | null;
+  /** Chosen Jupiter flyby perijove in Jupiter radii (2, 5, or 20) from C-ASSIST. */
+  flybyRadii: number | null;
 
   /** Moves to another phase. Returns false if the transition isn't allowed. */
   goTo: (phase: Phase) => boolean;
@@ -125,6 +139,18 @@ export interface GameState {
   recordChallengeResult: (result: ChallengeResult) => void;
   /** Completes the LAUNCH phase and transitions to JOURNEY. */
   completeLaunch: (result: LaunchResult) => boolean;
+  /** Initializes the journey state if not already initialized. */
+  beginJourney: (seed?: number) => boolean;
+  /** Advances the journey by up to `maxDays` days (pausing at pending events). */
+  stepJourney: (maxDays?: number) => void;
+  /** Advances the journey to the next milestone (checkpoint, scheduled challenge, event, or end). */
+  stepToNextMilestone: () => void;
+  /** Resolves a pending in-flight event with the chosen option ID. */
+  chooseEventOption: (optionId: string) => boolean;
+  /** Completes an in-flight physics challenge and applies its consequences to the journey. */
+  completeJourneyChallenge: (challengeId: string, result: ChallengeResult) => void;
+  /** Finishes the journey/operations phase and transitions to REPORT. */
+  finishJourney: () => boolean;
 
   setCrew: (crew: CrewMember[]) => void;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -297,6 +323,9 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
     vehicleId: null,
     launchResult: null,
     challengeResults: [],
+    completedChallengeIds: [],
+    journey: null,
+    flybyRadii: null,
 
     goTo: (phase) => {
       if (!canTransition(get().phase, phase)) return false;
@@ -456,7 +485,77 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
           ? [...state.challengeResults, result.insertionResult]
           : state.challengeResults;
       set({ launchResult: result, challengeResults });
-      return state.goTo('JOURNEY');
+      const moved = state.goTo('JOURNEY');
+      if (moved) get().beginJourney(1);
+      return moved;
+    },
+    beginJourney: (seed = 1) => {
+      const state = get();
+      if (!state.mission || !state.design || !state.vehicleId) return false;
+      const vehicle = getLaunchVehicle(state.vehicleId);
+      const initial = startJourney({
+        design: state.design,
+        mission: missionContextOf(state),
+        vehicle,
+        seed,
+      });
+      const next = advanceJourney(initial, 1);
+      set({
+        journey: next,
+        completedChallengeIds: [],
+        flybyRadii: null,
+      });
+      return true;
+    },
+    stepJourney: (maxDays = 1) => {
+      const state = get();
+      if (!state.journey || state.journey.ended || state.journey.pending) return;
+      const next = advanceJourney(state.journey, Math.max(1, maxDays));
+      set({ journey: next });
+      if (next.day > next.cruiseEnd && !next.ended && get().phase === 'JOURNEY') {
+        get().goTo('OPERATIONS');
+      }
+    },
+    stepToNextMilestone: () => {
+      const state = get();
+      if (!state.journey || state.journey.ended || state.journey.pending) return;
+      const target = nextJourneyMilestoneDay(state.journey, state.completedChallengeIds);
+      const days = Math.max(1, target - state.journey.day);
+      get().stepJourney(days);
+    },
+    chooseEventOption: (optionId) => {
+      const state = get();
+      if (!state.journey?.pending) return false;
+      try {
+        const next = resolveEvent(state.journey, optionId);
+        set({ journey: next });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    completeJourneyChallenge: (challengeId, result) => {
+      const state = get();
+      const challengeResults = [...state.challengeResults, result];
+      const completedChallengeIds = state.completedChallengeIds.includes(challengeId)
+        ? state.completedChallengeIds
+        : [...state.completedChallengeIds, challengeId];
+      if (!state.journey) {
+        set({ challengeResults, completedChallengeIds });
+        return;
+      }
+      const applied = applyChallengeToJourney(state.journey, challengeId, result);
+      set({
+        journey: applied.journey,
+        challengeResults,
+        completedChallengeIds,
+        flybyRadii: applied.flybyRadii ?? state.flybyRadii,
+      });
+    },
+    finishJourney: () => {
+      const state = get();
+      if (!state.journey?.ended) return false;
+      return state.goTo('REPORT');
     },
 
     setCrew: (crew) => set((state) => ({ profile: { ...state.profile, crew: crew.map((member) => ({ ...member, roles: [...member.roles] })) } })),
@@ -497,6 +596,9 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
         vehicleId: null,
         launchResult: null,
         challengeResults: [],
+        completedChallengeIds: [],
+        journey: null,
+        flybyRadii: null,
         phase: 'BRIEFING',
       });
       return true;
@@ -513,6 +615,9 @@ export function createGameStore(options: GameStoreOptions = {}): StoreApi<GameSt
         vehicleId: null,
         launchResult: null,
         challengeResults: [],
+        completedChallengeIds: [],
+        journey: null,
+        flybyRadii: null,
       });
       return state.goTo('ASSEMBLY');
     },

@@ -12,6 +12,10 @@ export {
   advanceJourney,
   resolveEvent,
   runJourney,
+  liveTelemetry,
+  journeyChallengeSchedule,
+  nextJourneyMilestoneDay,
+  applyChallengeToJourney,
   type JourneyInput,
   type JourneyState,
   type PendingEvent,
@@ -19,10 +23,13 @@ export {
   type CheckpointLog,
   type EventLog,
   type EndReason,
+  type LiveTelemetry,
+  type ScheduledChallenge,
 } from './sim/journey';
 export { EVENTS, getEvent, type EventDef } from './sim/events';
 export { scoreMission, marginScore, type MissionScore, type MissionOutcome, type RequirementResult, type ScoreComponent } from './sim/scoring';
 export { explainMission, type WhyBullet } from './sim/why';
+export { duration, fmt, gbPerDay, kg, kms, money, ms, round, watts, years } from './sim/format';
 export { WINNING_DESIGNS, makeDesign, type DesignFixture } from './sim/fixtures/designs';
 export { challengesFor, generateChallenge, physicsMastery, PATHWAY_CHALLENGES } from './challenges/generator';
 export type { Challenge, ChallengeOption, ChallengeResult, ChallengeTopic, ChallengeConsequence } from './challenges/types';

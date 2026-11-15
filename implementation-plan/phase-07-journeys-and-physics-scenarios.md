@@ -67,16 +67,37 @@ public/textures/{earth_night,earth_clouds,moon_normal,mars_normal,jupiter_bands}
 ```
 
 ## 5. Acceptance criteria
-- [ ] Each implemented pathway can be flown from departure to the end of operations, with ≥ 3 checkpoints that test the design (M10).
-- [ ] The **same pathway gives different outcomes for different designs** (for example, no radiation vault → instruments degrade at Jupiter; a small array → power crisis at Mars).
-- [ ] The dashboard updates live and the values match the P02 sim.
-- [ ] The Jupiter flyby altitude visibly changes the trajectory bend **and** the radiation dose. The explanation states the trade-off.
-- [ ] The spin habitat's visual rotation matches the chosen rpm. The crew comfort result follows 02 §F.
-- [ ] Light delay is shown and used (autonomy events).
-- [ ] Exoplanet worlds are labelled as artist's impressions from real parameters.
-- [ ] All scenes ≥ 30 fps on Low quality.
+- [x] Each implemented pathway can be flown from departure to the end of operations, with ≥ 3 checkpoints that test the design (M10).
+- [x] The **same pathway gives different outcomes for different designs** (for example, no radiation vault → instruments degrade at Jupiter; a small array → power crisis at Mars).
+- [x] The dashboard updates live and the values match the P02 sim.
+- [x] The Jupiter flyby altitude visibly changes the trajectory bend **and** the radiation dose. The explanation states the trade-off.
+- [x] The spin habitat's visual rotation matches the chosen rpm. The crew comfort result follows 02 §F.
+- [x] Light delay is shown and used (autonomy events).
+- [x] Exoplanet worlds are labelled as artist's impressions from real parameters.
+- [x] All scenes ≥ 30 fps on Low quality.
 
 ## 6. Risks and tips
 - **Scope risk:** this is the largest phase. Ship the framework + Ch 1 first, then add pathways one by one (each a mini-release).
 - Reuse: Planet, Atmosphere, Trajectory and Spacecraft components across all scenes.
 - Use floating-origin or per-scene scaling to avoid float jitter at large distances.
+
+---
+
+## Build notes (Phase 07)
+
+- **Pure-TypeScript Journey Telemetry & Scenario Scheduling (`src/game/sim/journey.ts`, `src/game/core/store.ts`):**
+  - Added `liveTelemetry(state)` computing real-time telemetry snapshots directly from `JourneyState` and `summarizeDesign`: flight phase (`Departure`, `Deep-Space Cruise`, `Arrival & Insertion`, `Science Operations`, `Earth Return Transit`, `Atmospheric Re-entry`, `Mission Complete`), Sun & Earth distances (AU), $1/d^2$ sunlight percentage (`sunlightFraction`), live power available vs. load, Survival Mode status (`SURVIVAL_COMMS_CUT`), battery charge %, live downlink rate (`downlinkRateMbps`, `dataPerDayGb`), one-way light delay (`lightDelaySeconds`), electronics & crew radiation doses, remaining $\Delta v$, and spin-habitat RPM / acceleration.
+  - Added `journeyChallengeSchedule(state)`, `nextJourneyMilestoneDay(state, completedChallengeIds)`, and `applyChallengeToJourney(state, challengeId, result)` scheduling pathway-specific physics challenges (`centripetal`, `rocketEquation`, `artificialGravity`, `sunlight`, `gravityAssist`, `signalDelay`, `transit`) at mission milestones and applying their consequences (`electronicsDose`, `crewHealth`, `scienceFactor`, and Jupiter perijove `flybyRadii`: `2 R_J`, `5 R_J`, or `20 R_J`) to the flight state.
+  - Extended `GameState` in `src/game/core/store.ts` with `journey`, `completedChallengeIds`, `flybyRadii`, and actions `beginJourney`, `stepJourney`, `stepToNextMilestone`, `chooseEventOption`, `completeJourneyChallenge`, and `finishJourney` (automatically transitioning `JOURNEY` → `OPERATIONS` upon arrival and `OPERATIONS`/`JOURNEY` → `REPORT` on completion).
+- **3D Journey & Destination Scenes (`src/scenes/Journey/journeyViewStore.ts`, `src/scenes/Journey/JourneyScene.tsx`):**
+  - Built inside the persistent `<Canvas>` with toggleable camera views (`System Map`, `Spacecraft Close-Up`, `Destination View`, plus `Exoplanet System (3D)` for Ch 5b):
+    - **System Map View:** 3D heliocentric map with Sun, Earth, destination bodies, transfer trajectory curve (with dynamic Jupiter gravity-assist bend for `2/5/20 R_J`), and live spacecraft marker.
+    - **Spacecraft Close-Up View:** The player's assembled 3D `Spacecraft` rotating at the chosen spin-habitat RPM ($\omega = 2\pi \cdot \text{RPM} / 60$), with pulsed cyan downlink beam and re-entry plasma wake (`ReentryPlasmaShell`).
+    - **All 6 Pathway Destination Views:** Ch 1 LEO (textured Earth with night lights, clouds, atmosphere, terminator orbit, and re-entry glow), Ch 2 Moon (textured Moon with polar shadowed-crater water-ice highlight rings and Earthrise), Ch 3 Mars (textured Mars with orange atmosphere rim, Phobos & Deimos markers, and rotating spin habitat), Ch 4 Jupiter (textured Jupiter, Io/Europa/Ganymede, glowing synchrotron radiation-belt torus, and bent perijove trajectory arc), Ch 5a Interstellar (3D `Heliosphere` bubble, distant Sun star, and `"Voyager 1 crossed here (121 AU)"` marker), and Ch 5b Exoplanet (Sun–Earth L2 halo orbit + 3D TRAPPIST-1 7-planet red-dwarf system explicitly labelled *"Artist's impression from measured size and orbit"*).
+- **Live Mission Dashboard, Checkpoints & Pathway Widgets (`src/ui/JourneyHud.tsx`, `src/ui/LightCurveChart.tsx`, `src/ui/DistanceLadder.tsx`):**
+  - Built `JourneyHud` with timeline progress bar, Pause / `1×` / `10×` / `100×` / `1000×` time controls, `NEXT CHECKPOINT ⏭` button, 3D camera view switcher, Live Telemetry Dashboard (R10), interactive `PhysicsConsole` challenges, pending anomaly event cards, and Checkpoint & Flight Log.
+  - Built `LightCurveChart` for Ch 5b plotting starlight flux dips $\Delta F / F = (R_p / R_\star)^2$ across TRAPPIST-1e, TRAPPIST-1b, Proxima Centauri b, and an Earth-Sun analogue.
+  - Built `DistanceLadder` for Ch 5a comparing Moon, Earth, Mars, Jupiter, Heliopause (`120 AU`, ~17–33 yr), and Proxima Centauri (`268,000 AU`, ~74,000 yr).
+- **Verification:**
+  - Added unit tests in `src/game/core/store.test.ts` (223 unit tests passing across 16 test files) and Playwright E2E spec `tests/e2e/journey.spec.ts` (13 E2E tests passing).
+
