@@ -115,6 +115,16 @@ export default function CreditsPage() {
         ))}
       </ul>
 
+      <h2 className="mt-10 text-2xl font-bold">Team — The Astranauts</h2>
+      <p className="mt-2 text-muted">
+        Saad Hussain · Asfand Ahmed · Syed Farhan Ali · Uzair Ibrahim · Danish Ahmed · Atif Ali Khan
+      </p>
+
+      <h2 className="mt-10 text-2xl font-bold">Use of Super Intelligence (SI)</h2>
+      <p className="mt-2 text-sm leading-relaxed text-muted">
+        AI / Large Language Model coding assistants were used during development to accelerate TypeScript code, game-data structuring, unit/E2E test authoring, and procedural Web Audio synthesizer code (<code className="font-mono text-ink">src/audio/soundEngine.ts</code>). No SI-generated images or videos are shipped in the game; 3D models come from NASA 3D Resources and planetary textures come from Solar System Scope (CC BY 4.0). No NASA logos, flags, or mission identifiers are used or modified.
+      </p>
+
       <h2 className="mt-10 text-2xl font-bold">Built with</h2>
       <p className="mt-2 text-muted">
         Next.js, React, TypeScript, Tailwind CSS, three.js, React Three Fiber,

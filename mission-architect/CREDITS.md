@@ -36,6 +36,16 @@ Every external asset must be listed here **before** it is committed.
 Next.js, React, TypeScript, Tailwind CSS, three.js, React Three Fiber, drei, zustand, immer, zod, glTF Transform,
 meshoptimizer, sharp, Vitest. See `package.json` for versions; each is under its own open-source licence (mostly MIT).
 
+## Team
+
+**The Astranauts:** Saad Hussain, Asfand Ahmed, Syed Farhan Ali, Uzair Ibrahim, Danish Ahmed, Atif Ali Khan.
+
+## Use of Super Intelligence (SI)
+
+- **Code and data:** AI / Large Language Model coding assistants were used to accelerate TypeScript implementation, JSON mission/part data structuring, and Vitest/Playwright test authoring.
+- **Audio:** The procedural Web Audio API synthesizer (`src/audio/soundEngine.ts`) was authored with AI coding assistance (no pre-recorded SI audio files).
+- **Images, textures, and 3D models:** No SI-generated images or videos are included in the application. All planetary textures are from Solar System Scope (CC BY 4.0) and `.glb` models are from NASA 3D Resources (with no NASA insignia or branding used as game identity).
+
 ## Challenge resources that shaped the design
 
 Listed on the in-game Credits page (`/credits`) and in `../game-design-docs/02-challenge-resources.md`.
